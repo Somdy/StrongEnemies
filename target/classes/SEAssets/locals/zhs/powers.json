@@ -1,0 +1,50 @@
+{
+  "strong:EntangleSkillPower": {
+    "NAME": "撒网",
+    "DESCRIPTIONS": [
+      "无法打出技能牌。持续 #b[amt_0] 个回合。"
+    ]
+  },
+  "strong:MawAngerPower": {
+    "NAME": "狂怒",
+    "DESCRIPTIONS": [
+      "在你打出 #b1 张技能牌时，获得 #b[amt_0] 点 #y格挡 。"
+    ]
+  },
+  "strong:LifeCounterPower": {
+    "NAME": "生命计数",
+    "DESCRIPTIONS": [
+      "累计受到伤害 #b30 点，获得额外增益。"
+    ]
+  },
+  "strong:CardCounterPower": {
+    "NAME": "卡牌计数",
+    "DESCRIPTIONS": [
+      "每当你打出 #b6 张牌，在你的抽牌堆塞入 #b1 张 #y疼痛 和 #b2 张 #y粘液 。"
+    ]
+  },
+  "strong:PowerStealerPower": {
+    "NAME": "能力汲取",
+    "DESCRIPTIONS": [
+      "每次攻击偷取一个随机buff."
+    ]
+  },
+  "strong:PoisonEndurancePower": {
+    "NAME": "毒耐性",
+    "DESCRIPTIONS": [
+      "受到 #y中毒 的伤害减半。"
+    ]
+  },
+  "strong:SpecialFlightPower": {
+    "NAME": "特殊飞行",
+    "DESCRIPTIONS": [
+      "受到的所有伤害减半。"
+    ]
+  },
+  "strong:FrustratedPower": {
+    "NAME": "挫败",
+    "DESCRIPTIONS": [
+      "当其余异鸟被打死时，眩晕一回合。"
+    ]
+  }
+}

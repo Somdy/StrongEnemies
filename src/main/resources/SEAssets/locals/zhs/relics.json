@@ -1,0 +1,9 @@
+{
+  "strong:SERBarricade": {
+    "NAME": "战士哥可以不拿",
+    "FLAVOR": "",
+    "DESCRIPTIONS": [
+      "拾取时获得 #b30 生命上限。战斗开始时获得 #y壁垒 。"
+    ]
+  }
+}

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project name="maven-antrun-" default="main"  >
+<target name="main">
+  <copy file="target/StrongEnemies.jar" tofile="D:\oData\Programme Files\Steam\steamapps\common\SlayTheSpire\mods/StrongEnemies.jar"/>
+</target>
+</project>
