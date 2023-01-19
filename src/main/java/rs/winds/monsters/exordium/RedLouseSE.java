@@ -12,6 +12,7 @@ import com.megacrit.cardcrawl.actions.common.ChangeStateAction;
 import com.megacrit.cardcrawl.actions.common.DamageAction;
 import com.megacrit.cardcrawl.actions.common.RollMoveAction;
 import com.megacrit.cardcrawl.cards.DamageInfo;
+import com.megacrit.cardcrawl.core.CardCrawlGame;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.monsters.AbstractMonster;
 import com.megacrit.cardcrawl.monsters.exordium.LouseNormal;
@@ -43,6 +44,12 @@ public class RedLouseSE extends AbstractMonster {
         addPower(new AngryPower(this, 3));
         addPower(new PoisonEndurancePower(this));
         addPower(new CurlUpPower(this, curlupAmt));
+    }
+    
+    @Override
+    public void usePreBattleAction() {
+        CardCrawlGame.music.unsilenceBGM();
+        CardCrawlGame.music.playTempBgmInstantly("SE_Colossuem_2_BGM.mp3", true);
     }
     
     @Override

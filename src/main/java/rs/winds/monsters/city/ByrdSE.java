@@ -13,13 +13,12 @@ import com.megacrit.cardcrawl.actions.common.*;
 import com.megacrit.cardcrawl.actions.utility.SFXAction;
 import com.megacrit.cardcrawl.actions.utility.TextAboveCreatureAction;
 import com.megacrit.cardcrawl.cards.DamageInfo;
+import com.megacrit.cardcrawl.core.CardCrawlGame;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.localization.MonsterStrings;
 import com.megacrit.cardcrawl.monsters.AbstractMonster;
 import com.megacrit.cardcrawl.monsters.city.Byrd;
-import com.megacrit.cardcrawl.powers.RegenerateMonsterPower;
-import com.megacrit.cardcrawl.powers.StrengthPower;
-import com.megacrit.cardcrawl.powers.ThornsPower;
+import com.megacrit.cardcrawl.powers.*;
 import com.megacrit.cardcrawl.vfx.AwakenedEyeParticle;
 import rs.lazymankits.utils.LMSK;
 import rs.winds.core.King;
@@ -59,6 +58,12 @@ public class ByrdSE extends AbstractMonster {
     }
     
     @Override
+    public void usePreBattleAction() {
+        CardCrawlGame.music.unsilenceBGM();
+        CardCrawlGame.music.playTempBgmInstantly("SE_Colossuem_2_BGM.mp3", true);
+    }
+    
+    @Override
     public void takeTurn() {
         if (!grounded && !hasPower(SpecialFlightPower.ID)) {
             addToBot(new ApplyPowerAction(this, this, new SpecialFlightPower(this, flightAmt)));
@@ -82,7 +87,6 @@ public class ByrdSE extends AbstractMonster {
                 break;
             case groundbuff:
                 addToBot(new SetAnimationAction(this, "head_lift"));
-                addToBot(new GainBlockAction(this, 10));
                 addToBot(new DamageAction(LMSK.Player(), damage.get(groundbuff), AbstractGameAction.AttackEffect.SLASH_HORIZONTAL));
                 setMove(getup, Intent.UNKNOWN);
                 return;
@@ -117,9 +121,13 @@ public class ByrdSE extends AbstractMonster {
                 updateHitbox(0.0F, 50.0F, 240.0F, 180.0F);
                 break;
             case "GROUNDED":
-                setMove(groundbuff, Intent.ATTACK_DEFEND, damage.get(groundbuff).base);
+                setMove(groundbuff, Intent.ATTACK, damage.get(groundbuff).base);
                 createIntent();
                 grounded = true;
+                addToBot(new GainBlockAction(this, 20));
+                addToBot(new RemoveSpecificPowerAction(this, this, SpecialFlightPower.ID));
+                addToBot(new RemoveSpecificPowerAction(this, this, VulnerablePower.POWER_ID));
+                addToBot(new RemoveSpecificPowerAction(this, this, WeakPower.POWER_ID));
                 loadAnimation("images/monsters/theCity/byrd/grounded.atlas", "images/monsters/theCity/byrd/grounded.json", 1.0F);
                 e = this.state.setAnimation(0, "idle", true);
                 e.setTime(e.getEndTime() * MathUtils.random());

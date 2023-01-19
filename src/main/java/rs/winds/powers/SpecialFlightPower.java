@@ -46,8 +46,8 @@ public class SpecialFlightPower extends AbstractSEPower {
     
     @Override
     public void onRemove() {
-        addToBot(new ApplyPowerAction(owner, owner, new WeakPower(owner, 2, true)));
-        addToBot(new ApplyPowerAction(owner, owner, new VulnerablePower(owner, 2, true)));
+        addToTop(new ApplyPowerAction(owner, owner, new VulnerablePower(owner, 2, true)));
+        addToTop(new ApplyPowerAction(owner, owner, new WeakPower(owner, 2, true)));
     }
     
     @Override

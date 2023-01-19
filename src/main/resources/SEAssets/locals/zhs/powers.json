@@ -46,5 +46,29 @@
     "DESCRIPTIONS": [
       "当其余异鸟被打死时，眩晕一回合。"
     ]
+  },
+  "strong:PhysicalReboundPower": {
+    "NAME": "物理反弹",
+    "DESCRIPTIONS": [
+      "每受到单段物理伤害，给予玩家 #b1 层 #y混乱 。"
+    ]
+  },
+  "strong:SpellReboundPower": {
+    "NAME": "法术反弹",
+    "DESCRIPTIONS": [
+      "每受到单段非物理伤害，给予玩家 #b1 层 #y邪咒 。"
+    ]
+  },
+  "strong:TempConfusionPower": {
+    "NAME": "临时混乱",
+    "DESCRIPTIONS": [
+      "你抽到的每一张牌，耗能都会随机变化。持续 #b[amt_0] 回合。"
+    ]
+  },
+  "strong:TempHexPower": {
+    "NAME": "临时邪咒",
+    "DESCRIPTIONS": [
+      "你每打出一张非攻击牌，都会将 #b[amt_0] 张 #y晕眩 随机放入你的牌组中。持续 #b[amt_0] 回合。"
+    ]
   }
 }
