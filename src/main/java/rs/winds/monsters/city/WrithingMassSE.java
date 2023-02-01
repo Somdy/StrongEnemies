@@ -23,7 +23,7 @@ public class WrithingMassSE extends WrithingMass {
     public void usePreBattleAction() {
         addToBot(new ApplyPowerAction(this, this, new ReactivePower(this)));
         addToBot(new ApplyPowerAction(this, this, new MalleablePower(this)));
-        addToBot(new GainBlockAction(this, 40));
+        addToBot(new GainBlockAction(this, 30));
     }
     
     @Override

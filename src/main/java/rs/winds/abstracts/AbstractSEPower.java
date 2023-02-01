@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.megacrit.cardcrawl.core.AbstractCreature;
 import com.megacrit.cardcrawl.helpers.ImageMaster;
 import com.megacrit.cardcrawl.localization.PowerStrings;
+import com.megacrit.cardcrawl.monsters.AbstractMonster;
 import rs.lazymankits.abstracts.LMCustomPower;
 import rs.winds.core.King;
 
@@ -159,4 +160,6 @@ public abstract class AbstractSEPower extends LMCustomPower {
     protected TextureAtlas getPowerAtlas() {
         return null;
     }
+    
+    public void onMonsterDeath(AbstractMonster target) {}
 }

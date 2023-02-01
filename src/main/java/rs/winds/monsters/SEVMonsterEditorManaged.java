@@ -18,6 +18,7 @@ import com.megacrit.cardcrawl.blights.Shield;
 import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.cards.DamageInfo;
 import com.megacrit.cardcrawl.cards.status.*;
+import com.megacrit.cardcrawl.characters.AbstractPlayer;
 import com.megacrit.cardcrawl.core.AbstractCreature;
 import com.megacrit.cardcrawl.core.CardCrawlGame;
 import com.megacrit.cardcrawl.core.Settings;
@@ -41,7 +42,9 @@ import javassist.bytecode.*;
 import javassist.convert.Transformer;
 import javassist.expr.ExprEditor;
 import javassist.expr.MethodCall;
+import rs.lazymankits.abstracts.DamageInfoTag;
 import rs.lazymankits.actions.utility.QuickAction;
+import rs.lazymankits.utils.LMDamageInfoHelper;
 import rs.lazymankits.utils.LMSK;
 import rs.winds.cards.HeartOfSpire;
 import rs.winds.core.King;
@@ -995,6 +998,10 @@ public class SEVMonsterEditorManaged {
                         @Override
                         public void updateDescription() {
                             description = IntangiblePlayerPower.DESCRIPTIONS[0];
+                        }
+                        @Override
+                        public int onAttacked(DamageInfo info, int damageAmount) {
+                            return 1;
                         }
                     }));
                 } else {
@@ -2136,6 +2143,7 @@ public class SEVMonsterEditorManaged {
                         m.addToBot(new ShoutAction(m, Maw.DIALOG[0], 1F, 2F));
                         m.addToBot(new ApplyPowerAction(LMSK.Player(), m, new WeakPower(LMSK.Player(), 5, true)));
                         m.addToBot(new ApplyPowerAction(LMSK.Player(), m, new FrailPower(LMSK.Player(), 5, true)));
+                        m.addToBot(new ApplyPowerAction(LMSK.Player(), m, new VulnerablePower(LMSK.Player(), 5, true)));
                         m.addToBot(new ApplyPowerAction(LMSK.Player(), m, new StrengthPower(LMSK.Player(), -2)));
                         m.addToBot(new ApplyPowerAction(LMSK.Player(), m, new DexterityPower(LMSK.Player(), -2)));
                         m.addToBot(new ApplyPowerAction(LMSK.Player(), m, new FocusPower(LMSK.Player(), -2)));
@@ -2157,6 +2165,10 @@ public class SEVMonsterEditorManaged {
                             @Override
                             public void updateDescription() {
                                 description = IntangiblePlayerPower.DESCRIPTIONS[0];
+                            }
+                            @Override
+                            public int onAttacked(DamageInfo info, int damageAmount) {
+                                return 1;
                             }
                         }));
                         m.addToBot(new ApplyPowerAction(m, m, new BufferPower(m, 2)));
@@ -2226,9 +2238,8 @@ public class SEVMonsterEditorManaged {
             };
             e.putBool("firstTurn", true);
             e.preBattle = m -> {
-                m.addToBot(new ApplyPowerAction(m, m, new IntangiblePlayerPower(m, 1)));
                 m.addToBot(new ApplyPowerAction(m, m, new RegenerateMonsterPower(m, 10)));
-                m.addToBot(new GainBlockAction(m, m, 100));
+                m.addToBot(new GainBlockAction(m, m, 70));
                 m.addToBot(new ApplyPowerAction(m, m, new MalleablePower(m, 2)));
                 return false;
             };
@@ -2618,6 +2629,7 @@ public class SEVMonsterEditorManaged {
         private static final byte multi = 1;
         private static final byte buff = 2;
         private static final int multiCount = 5;
+        private static final DamageInfoTag IGNORE_INTANGIBLE = new DamageInfoTag("SE_THORNS_IGNORE_INTANGIBLE");
         public static void Edit(AbstractMonster _inst) {
             MonsterEditor e = GetModifierEditor(_inst);
             e.initFunc = m -> {
@@ -2638,7 +2650,7 @@ public class SEVMonsterEditorManaged {
                             m.addToBot(new SFXAction("VO_AWAKENEDONE_1"));
                             m.addToBot(new VFXAction(m, new IntenseZoomEffect(m.hb.cX, m.hb.cY, true), 0.5F, true));
                             m.addToBot(new ChangeStateAction(m, "REBIRTH"));
-                            m.addToBot(new ApplyPowerAction(m, m, new InvinciblePower(m, 200)));
+                            m.addToBot(new ApplyPowerAction(m, m, new InvinciblePower(m, 180)));
                             break;
                         case attack:
                             m.addToBot(new ChangeStateAction(m, "ATTACK_2"));
@@ -2719,7 +2731,26 @@ public class SEVMonsterEditorManaged {
                     __instance.addToBot(new HealAction(__instance, __instance, __instance.maxHealth));
                     if (e.getBool("form3")) {
                         __instance.addToBot(new ApplyPowerAction(__instance, __instance, new RegenerateMonsterPower(__instance, 5)));
-                        __instance.addToBot(new ApplyPowerAction(__instance, __instance, new ThornsPower(__instance, 3)));
+                        __instance.addToBot(new ApplyPowerAction(__instance, __instance, new ThornsPower(__instance, 3){
+                            @Override
+                            public void updateDescription() {
+                                super.updateDescription();
+                                description += "（无视无实体）";
+                            }
+                            @Override
+                            public int onAttacked(DamageInfo info, int damageAmount) {
+                                if (info.type != DamageInfo.DamageType.THORNS && info.type != DamageInfo.DamageType.HP_LOSS && info.owner != null && info.owner != this.owner) {
+                                    flash();
+                                    addToTop(new DamageAction(info.owner, LMDamageInfoHelper.Create(owner, amount, DamageInfo.DamageType.THORNS, IGNORE_INTANGIBLE.cpy()), 
+                                            AbstractGameAction.AttackEffect.SLASH_HORIZONTAL, true));
+                                }
+                                return damageAmount;
+                            }
+                            {
+                                ID = "真实荆棘";
+                                name = "真实荆棘";
+                            }
+                        }));
                         __instance.addToBot(new CanLoseAction());
                     }
                     return SpireReturn.Return();
@@ -2777,6 +2808,22 @@ public class SEVMonsterEditorManaged {
                             m.addToBot(new EscapeAction(m));
                         }
                     }
+                }
+            }
+        }
+        @SpirePatch2(clz = AbstractPlayer.class, method = "damage")
+        public static class IgnorePlayerIntangiblePatch {
+            @SpireInsertPatch(locator = Locator.class, localvars = {"damageAmount"})
+            public static void Insert(AbstractPlayer __instance, DamageInfo info, @ByRef int[] damageAmount) {
+                if (__instance.hasPower(IntangiblePlayerPower.POWER_ID) && LMDamageInfoHelper.HasTag(info, IGNORE_INTANGIBLE)) {
+                    damageAmount[0] = info.output;
+                }
+            }
+            private static class Locator extends SpireInsertLocator {
+                @Override
+                public int[] Locate(CtBehavior ctBehavior) throws Exception {
+                    Matcher.MethodCallMatcher matcher = new Matcher.MethodCallMatcher(AbstractPlayer.class, "decrementBlock");
+                    return LineFinder.findInOrder(ctBehavior, matcher);
                 }
             }
         }
@@ -3292,7 +3339,7 @@ public class SEVMonsterEditorManaged {
                         for (int i = 0; i < multiCount; i++) {
                             m.addToBot(new DamageAction(LMSK.Player(), m.damage.get(bloods), BLUNT_HEAVY, true));
                         }
-                        m.addToBot(new MakeTempCardInDiscardAction(new Dazed(), 1));
+//                        m.addToBot(new MakeTempCardInDiscardAction(new Dazed(), 1));
                         break;
                     case massive:
                         m.addToBot(new VFXAction(new ViceCrushEffect(LMSK.Player().hb.cX, LMSK.Player().hb.cY), 0.5F));

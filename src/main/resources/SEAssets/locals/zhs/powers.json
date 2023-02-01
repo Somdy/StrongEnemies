@@ -8,7 +8,7 @@
   "strong:MawAngerPower": {
     "NAME": "狂怒",
     "DESCRIPTIONS": [
-      "在你打出 #b1 张技能牌时，获得 #b[amt_0] 点 #y格挡 。"
+      "在你打出 #b1 张牌时，获得 #b[amt_0] 点 #y格挡 。"
     ]
   },
   "strong:LifeCounterPower": {
@@ -44,7 +44,7 @@
   "strong:FrustratedPower": {
     "NAME": "挫败",
     "DESCRIPTIONS": [
-      "当其余异鸟被打死时，眩晕一回合。"
+      "每死一只异鸟，获得 #b1 #y力量 和 #b25 血上限。"
     ]
   },
   "strong:PhysicalReboundPower": {

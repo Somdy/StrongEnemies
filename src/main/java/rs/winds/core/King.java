@@ -42,6 +42,7 @@ import rs.winds.monsters.exordium.RedLouseSE;
 import rs.winds.monsters.exordium.TransientSE;
 import rs.winds.patches.SEEnums;
 import rs.winds.relics.SERBarricade;
+import rs.winds.relics.SERInvitation;
 import rs.winds.rewards.ApoReward;
 
 import java.util.HashMap;
@@ -242,6 +243,11 @@ public class King implements EditStringsSubscriber, PostInitializeSubscriber, St
         BaseMod.addMonster(Encounter.TEST_MONSTER, () -> Populate(new TestMonster(0F, 0F)));
         BaseMod.addMonster(Encounter.THREE_DARKLINGS_ENC, () -> Populate(new Darkling(-440F, 10F), new DarklingSE(-140F, 30F), 
                 new Darkling(180F, -5F)));
+        
+        // the ending
+        BaseMod.addMonster(Encounter.TWO_TEST_MONSTER, () -> Populate(new TestMonster(-500F, 0F), new TestMonster(0F, 0F)));
+        BaseMod.addMonster(Encounter.LOUSE_BYRD_DARKLING, () -> Populate(new RedLouseSE(-580F, MathUtils.random(-20F, 20F)), 
+                new ByrdSE(-240F, MathUtils.random(25F, 70F)), new DarklingSE(120F, -5F)));
     }
     
     @Override
@@ -255,6 +261,7 @@ public class King implements EditStringsSubscriber, PostInitializeSubscriber, St
     @Override
     public void receiveEditRelics() {
         BaseMod.addRelic(new SERBarricade(), RelicType.SHARED);
+        BaseMod.addRelic(new SERInvitation(), RelicType.SHARED);
     }
     
     @NotNull
@@ -275,5 +282,7 @@ public class King implements EditStringsSubscriber, PostInitializeSubscriber, St
         public static final String THREE_LOUSE_ENC = "SE 3 Louses";
         public static final String THREE_BYRDS_ENC = "SE 3 Byrds";
         public static final String THREE_DARKLINGS_ENC = "SE 3 Darklings";
+        public static final String TWO_TEST_MONSTER = "SE Two Test Monster";
+        public static final String LOUSE_BYRD_DARKLING = "SE Louse Byrd Darkling";
     }
 }

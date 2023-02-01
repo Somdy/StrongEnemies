@@ -17,6 +17,7 @@ import javassist.expr.ExprEditor;
 import javassist.expr.MethodCall;
 import rs.winds.core.King;
 import rs.winds.relics.SERBarricade;
+import rs.winds.relics.SERInvitation;
 import rs.winds.rewards.ApoReward;
 
 public class DropRewardPatch {
@@ -29,7 +30,7 @@ public class DropRewardPatch {
                 AbstractDungeon.getCurrRoom().rewards.add(new ApoReward());
                 AbstractDungeon.getCurrRoom().addRelicToRewards(new BottledLightning());
                 AbstractDungeon.getCurrRoom().addRelicToRewards(new PrayerWheel());
-                AbstractDungeon.getCurrRoom().addRelicToRewards(new QuestionCard());
+                AbstractDungeon.getCurrRoom().addRelicToRewards(new SERInvitation());
             }
         }
     }

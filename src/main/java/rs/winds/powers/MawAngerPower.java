@@ -20,7 +20,7 @@ public class MawAngerPower extends AbstractSEPower {
     
     @Override
     public void onUseCard(AbstractCard card, UseCardAction action) {
-        if (isCardTypeOf(card, AbstractCard.CardType.SKILL) && amount > 0) {
+        if (amount > 0) {
             flash();
             addToTop(new GainBlockAction(owner, owner, amount));
         }

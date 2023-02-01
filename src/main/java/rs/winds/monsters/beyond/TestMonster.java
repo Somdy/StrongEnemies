@@ -49,7 +49,7 @@ public class TestMonster extends AbstractMonster {
                 break;
             case buff:
                 addToBot(new GainBlockAction(this, this, 20));
-                addToBot(new ApplyPowerAction(this, this, new BufferPower(this, 5)));
+                addToBot(new ApplyPowerAction(this, this, new BufferPower(this, 3)));
                 break;
         }
         addToBot(new RollMoveAction(this));

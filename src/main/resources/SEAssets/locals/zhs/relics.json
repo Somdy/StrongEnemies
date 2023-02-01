@@ -5,5 +5,12 @@
     "DESCRIPTIONS": [
       "拾取时获得 #b30 生命上限。战斗开始时获得 #y壁垒 。"
     ]
+  },
+  "strong:SERInvitation": {
+    "NAME": "竞技场的邀请信",
+    "FLAVOR": "",
+    "DESCRIPTIONS": [
+      "拾取后可在火堆进入竞技场。"
+    ]
   }
 }

@@ -1,23 +1,21 @@
 package rs.winds.events;
 
-import com.badlogic.gdx.math.MathUtils;
-import com.evacipated.cardcrawl.modthespire.lib.*;
+import com.evacipated.cardcrawl.modthespire.lib.ByRef;
+import com.evacipated.cardcrawl.modthespire.lib.SpirePatch2;
+import com.evacipated.cardcrawl.modthespire.lib.SpirePrefixPatch;
 import com.megacrit.cardcrawl.core.CardCrawlGame;
 import com.megacrit.cardcrawl.core.Settings;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
-import com.megacrit.cardcrawl.dungeons.Exordium;
 import com.megacrit.cardcrawl.dungeons.TheBeyond;
 import com.megacrit.cardcrawl.dungeons.TheCity;
+import com.megacrit.cardcrawl.dungeons.TheEnding;
 import com.megacrit.cardcrawl.events.AbstractImageEvent;
 import com.megacrit.cardcrawl.events.city.Colosseum;
 import com.megacrit.cardcrawl.helpers.MonsterHelper;
 import com.megacrit.cardcrawl.localization.EventStrings;
 import com.megacrit.cardcrawl.relics.AbstractRelic;
-import javassist.CtBehavior;
 import rs.lazymankits.utils.LMSK;
 import rs.winds.core.King;
-
-import java.util.ArrayList;
 
 public class ColosseumSE extends AbstractImageEvent {
     public static final String ID = King.MakeID(Colosseum.ID);
@@ -79,6 +77,8 @@ public class ColosseumSE extends AbstractImageEvent {
                 return combat == 0 ? MonsterHelper.THREE_BYRDS_ENC : King.Encounter.THREE_BYRDS_ENC;
             case TheBeyond.ID:
                 return combat == 0 ? MonsterHelper.THREE_DARKLINGS_ENC : King.Encounter.THREE_DARKLINGS_ENC;
+            case TheEnding.ID:
+                return combat == 0 ? King.Encounter.TWO_TEST_MONSTER : King.Encounter.LOUSE_BYRD_DARKLING;
             default:
                 return combat == 0 ? MonsterHelper.THREE_LOUSE_ENC : King.Encounter.THREE_LOUSE_ENC;
         }
