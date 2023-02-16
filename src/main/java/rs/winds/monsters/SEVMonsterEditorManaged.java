@@ -1,6 +1,7 @@
 package rs.winds.monsters;
 
 import basemod.BaseMod;
+import basemod.patches.com.megacrit.cardcrawl.screens.compendium.CardLibraryScreen.NoCompendium;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.MathUtils;
 import com.evacipated.cardcrawl.modthespire.lib.*;
@@ -1001,7 +1002,7 @@ public class SEVMonsterEditorManaged {
                         }
                         @Override
                         public int onAttacked(DamageInfo info, int damageAmount) {
-                            return 1;
+                            return King.INTANGIBLE_FINAL_DAMAGE;
                         }
                     }));
                 } else {
@@ -1892,6 +1893,18 @@ public class SEVMonsterEditorManaged {
                     m.addToBot(new RollMoveAction(m));
                     return true;
                 }
+                if (m.nextMove == 5) {
+                    if (MathUtils.randomBoolean()) {
+                        m.addToBot(new SFXAction("DARKLING_REGROW_2", MathUtils.random(-0.1F, 0.1F)));
+                    } else {
+                        m.addToBot(new SFXAction("DARKLING_REGROW_1", MathUtils.random(-0.1F, 0.1F)));
+                    }
+                    m.addToBot(new HealAction(m, m, m.maxHealth));
+                    m.addToBot(new ChangeStateAction(m, "REVIVE"));
+                    for (AbstractRelic r : LMSK.Player().relics)
+                        r.onSpawnMonster(m);
+                    return true;
+                }
                 return false;
             };
         }
@@ -2168,7 +2181,7 @@ public class SEVMonsterEditorManaged {
                             }
                             @Override
                             public int onAttacked(DamageInfo info, int damageAmount) {
-                                return 1;
+                                return King.INTANGIBLE_FINAL_DAMAGE;
                             }
                         }));
                         m.addToBot(new ApplyPowerAction(m, m, new BufferPower(m, 2)));
@@ -2862,7 +2875,7 @@ public class SEVMonsterEditorManaged {
                         return true;
                     case reborn:
                         m.halfDead = false;
-                        m.addToBot(new HealAction(m, m, m.maxHealth / 2));
+                        m.addToBot(new HealAction(m, m, m.maxHealth));
                         if (lastMoveBefore(m, buff)) {
                             m.setMove(attack, AbstractMonster.Intent.ATTACK_DEBUFF, m.damage.get(attack).base, multiCount, true);
                         } else {
@@ -2973,7 +2986,7 @@ public class SEVMonsterEditorManaged {
                         return true;
                     case reborn:
                         m.halfDead = false;
-                        m.addToBot(new HealAction(m, m, m.maxHealth / 2));
+                        m.addToBot(new HealAction(m, m, m.maxHealth));
                         if (lastMoveBefore(m, buff)) {
                             m.setMove(attack, AbstractMonster.Intent.ATTACK, m.damage.get(attack).base, multiCount, true);
                         } else {

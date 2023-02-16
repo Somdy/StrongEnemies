@@ -16,6 +16,7 @@ import com.megacrit.cardcrawl.localization.EventStrings;
 import com.megacrit.cardcrawl.relics.AbstractRelic;
 import rs.lazymankits.utils.LMSK;
 import rs.winds.core.King;
+import rs.winds.dungeons.CityDepths;
 
 public class ColosseumSE extends AbstractImageEvent {
     public static final String ID = King.MakeID(Colosseum.ID);
@@ -78,6 +79,7 @@ public class ColosseumSE extends AbstractImageEvent {
             case TheBeyond.ID:
                 return combat == 0 ? MonsterHelper.THREE_DARKLINGS_ENC : King.Encounter.THREE_DARKLINGS_ENC;
             case TheEnding.ID:
+            case CityDepths.ID:
                 return combat == 0 ? King.Encounter.TWO_TEST_MONSTER : King.Encounter.LOUSE_BYRD_DARKLING;
             default:
                 return combat == 0 ? MonsterHelper.THREE_LOUSE_ENC : King.Encounter.THREE_LOUSE_ENC;

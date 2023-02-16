@@ -1,12 +1,25 @@
 package rs.winds.monsters;
 
 import basemod.ReflectionHacks;
+import com.megacrit.cardcrawl.cards.DamageInfo;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.monsters.AbstractMonster;
 import com.megacrit.cardcrawl.random.Random;
 import org.jetbrains.annotations.NotNull;
 
 public interface SETool {
+    
+    static boolean SuchCalledPhysicalDamage(DamageInfo.DamageType type) {
+        return type == DamageInfo.DamageType.NORMAL;
+    }
+    
+    static boolean SoCalledPhysicalDamage(DamageInfo info) {
+        return info.owner != null && info.type == DamageInfo.DamageType.NORMAL;
+    }
+    
+    static boolean SoCalledSpellDamage(DamageInfo info) {
+        return !SoCalledPhysicalDamage(info);
+    }
     
     static Random MonsterAIRng() {
         return AbstractDungeon.aiRng;

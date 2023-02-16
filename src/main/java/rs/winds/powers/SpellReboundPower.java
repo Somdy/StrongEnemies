@@ -7,6 +7,7 @@ import com.megacrit.cardcrawl.powers.AbstractPower;
 import rs.lazymankits.utils.LMSK;
 import rs.winds.abstracts.AbstractSEPower;
 import rs.winds.core.King;
+import rs.winds.monsters.SETool;
 
 public class SpellReboundPower extends AbstractSEPower {
     public static final String ID = King.MakeID("SpellReboundPower");
@@ -19,7 +20,7 @@ public class SpellReboundPower extends AbstractSEPower {
     
     @Override
     public int onAttacked(DamageInfo info, int damageAmount) {
-        if (!(info.owner != null && info.type == DamageInfo.DamageType.NORMAL)) {
+        if (SETool.SoCalledSpellDamage(info)) {
             flash();
             addToTop(new ApplyPowerAction(LMSK.Player(), owner, new TempHexPower(LMSK.Player(), 1)));
         }

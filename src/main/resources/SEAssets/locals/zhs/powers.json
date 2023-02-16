@@ -70,5 +70,83 @@
     "DESCRIPTIONS": [
       "你每打出一张非攻击牌，都会将 #b[amt_0] 张 #y晕眩 随机放入你的牌组中。持续 #b[amt_0] 回合。"
     ]
+  },
+  "strong:DeathrattlePower": {
+    "NAME": "亡语",
+    "DESCRIPTIONS": [
+      " "
+    ]
+  },
+  "strong:SlaverElitePower": {
+    "NAME": "畏惧疼痛",
+    "DESCRIPTIONS": [
+      "每当你 #y消耗 一张牌，受到 #b[amt_0] 伤害，将这张牌的复制牌洗入弃牌堆"
+    ]
+  },
+  "strong:VulnerablePlusPower": {
+    "NAME": "强效易伤",
+    "DESCRIPTIONS": [
+      "受到的伤害额外增加 #b80%"
+    ]
+  },
+  "strong:LightArmorPower": {
+    "NAME": "轻甲",
+    "DESCRIPTIONS": [
+      "受到的物理伤害（能触发飞行的）减少 #b20%"
+    ]
+  },
+  "strong:WeakPlusPower": {
+    "NAME": "强效虚弱",
+    "DESCRIPTIONS": [
+      "你造成的伤害减少 #b60%"
+    ]
+  },
+  "strong:MidArmorPower": {
+    "NAME": "中甲",
+    "DESCRIPTIONS": [
+      "受到的物理伤害（能触发飞行的）减少 #b50%"
+    ]
+  },
+  "strong:PaladinCardCounterPower": {
+    "NAME": "卡牌计数",
+    "DESCRIPTIONS": [
+      "每当你打出 #b[amt_0] 张牌，所有敌人获得 #b[amt_1] #y缓冲 "
+    ]
+  },
+  "strong:TauntPower": {
+    "NAME": "嘲讽",
+    "DESCRIPTIONS": [
+      "你只能攻击被嘲讽的那个怪物"
+    ]
+  },
+  "strong:AuthorityPower": {
+    "NAME": "王威",
+    "DESCRIPTIONS": [
+      "每次受到单段物理伤害，有 #b50% 的概率立即攻击 #b40 点固定伤害"
+    ]
+  },
+  "strong:SpotWeaknessPower": {
+    "NAME": "意图识破",
+    "DESCRIPTIONS": [
+      "如果玩家处于灵体状态，攻击从n*3变成3*n，如果玩家有壁垒，攻击变成2n*3"
+    ]
+  },
+  "strong:HighSpellResistancePower": {
+    "NAME": "高魔抗",
+    "DESCRIPTIONS": [
+      "受到的非物理伤害（不能触发荆棘柔韧的）减少 #b80%"
+    ]
+  },
+  "strong:MidSpellResistancePower": {
+    "NAME": "中魔抗",
+    "DESCRIPTIONS": [
+      "受到的非物理伤害（不能触发荆棘柔韧的）减少 #b50%"
+    ]
+  },
+  "strong:WatcherThreePower": {
+    "NAME": "观者3",
+    "DESCRIPTIONS": [
+      "每回合中，你每次打出一张攻击牌，获得 #b[amt_0] 点临时 #y力量 ，你每次打出一张技能牌，获得 #b[amt_1] 点临时 #y敏捷 。"
+    ]
   }
 }

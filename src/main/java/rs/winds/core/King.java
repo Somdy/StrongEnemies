@@ -1,5 +1,6 @@
 package rs.winds.core;
 
+import actlikeit.dungeons.CustomDungeon;
 import basemod.BaseMod;
 import basemod.ReflectionHacks;
 import basemod.abstracts.CustomSavable;
@@ -7,17 +8,16 @@ import basemod.eventUtil.AddEventParams;
 import basemod.eventUtil.EventUtils;
 import basemod.helpers.RelicType;
 import basemod.interfaces.*;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.MathUtils;
 import com.evacipated.cardcrawl.modthespire.lib.SpireInitializer;
 import com.megacrit.cardcrawl.actions.common.ApplyPowerAction;
 import com.megacrit.cardcrawl.actions.common.GainBlockAction;
 import com.megacrit.cardcrawl.actions.common.RollMoveAction;
+import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.core.CardCrawlGame;
 import com.megacrit.cardcrawl.core.Settings;
-import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
-import com.megacrit.cardcrawl.dungeons.Exordium;
-import com.megacrit.cardcrawl.dungeons.TheBeyond;
-import com.megacrit.cardcrawl.dungeons.TheCity;
+import com.megacrit.cardcrawl.dungeons.*;
 import com.megacrit.cardcrawl.events.city.Colosseum;
 import com.megacrit.cardcrawl.helpers.MonsterHelper;
 import com.megacrit.cardcrawl.localization.*;
@@ -33,11 +33,19 @@ import com.megacrit.cardcrawl.powers.*;
 import com.megacrit.cardcrawl.rewards.RewardSave;
 import org.jetbrains.annotations.NotNull;
 import rs.lazymankits.LMDebug;
+import rs.lazymankits.utils.LMSK;
+import rs.winds.abstracts.AbstractSEPower;
+import rs.winds.cards.watcher.WatcherFour;
+import rs.winds.cards.watcher.WatcherOne;
+import rs.winds.cards.watcher.WatcherThree;
+import rs.winds.cards.watcher.WatcherTwo;
+import rs.winds.dungeons.CityDepths;
 import rs.winds.events.ColosseumSE;
 import rs.winds.monsters.beyond.DarklingSE;
 import rs.winds.monsters.beyond.TestMonster;
 import rs.winds.monsters.city.ByrdSE;
 import rs.winds.monsters.city.WrithingMassSE;
+import rs.winds.monsters.citydepths.*;
 import rs.winds.monsters.exordium.RedLouseSE;
 import rs.winds.monsters.exordium.TransientSE;
 import rs.winds.patches.SEEnums;
@@ -50,15 +58,16 @@ import java.util.Map;
 
 @SpireInitializer
 public class King implements EditStringsSubscriber, PostInitializeSubscriber, StartGameSubscriber, CustomSavable<Map<String, String>>, 
-        EditRelicsSubscriber {
+        EditRelicsSubscriber, AddAudioSubscriber, PostExhaustSubscriber, EditCardsSubscriber {
     public static final String MOD_ID = "StrongEnemies";
     public static final String MOD_NAME = "Strong Enemies";
     public static final String[] AUTHORS = {"Somdy", "The World"};
     
     private static final String MOD_PREFIX = "strong";
-    
+    public static final int INTANGIBLE_FINAL_DAMAGE = 3;
     public static boolean ApoDropped = false;
     public static boolean ShieldAndSpearExisting = false;
+    public static boolean DepthsElitesAllFinished = true;
     
     public static void initialize() {
         King instance = new King();
@@ -119,6 +128,17 @@ public class King implements EditStringsSubscriber, PostInitializeSubscriber, St
         return CardCrawlGame.languagePack.getMonsterStrings(id);
     }
     
+    public static CardStrings CardStrings(@NotNull String id) {
+        return CardCrawlGame.languagePack.getCardStrings(id);
+    }
+    
+    public static String CardImage(String imgName) {
+        String path = "SEAssets/images/cards/" + imgName + ".png";
+        if (Gdx.files.internal(path).exists())
+            return path;
+        return "SEAssets/images/cards/heartofspire.png";
+    }
+    
     @Override
     public Map<String, String> onSave() {
         Map<String, String> map = new HashMap<>();
@@ -145,6 +165,7 @@ public class King implements EditStringsSubscriber, PostInitializeSubscriber, St
         BaseMod.loadCustomStringsFile(PowerStrings.class, "SEAssets/locals/" + lang + "/powers.json");
         BaseMod.loadCustomStringsFile(CardStrings.class, "SEAssets/locals/" + lang + "/cards.json");
         BaseMod.loadCustomStringsFile(RelicStrings.class, "SEAssets/locals/" + lang + "/relics.json");
+        BaseMod.loadCustomStringsFile(MonsterStrings.class, "SEAssets/locals/" + lang + "/monsters.json");
     }
     
     @Override
@@ -163,7 +184,61 @@ public class King implements EditStringsSubscriber, PostInitializeSubscriber, St
                 .eventType(EventUtils.EventType.NORMAL).spawnCondition(() -> AbstractDungeon.ascensionLevel >= 20)
                 .bonusCondition(() -> AbstractDungeon.currMapNode != null && AbstractDungeon.currMapNode.y > AbstractDungeon.map.size() / 2)
                 .dungeonID(TheBeyond.ID).endsWithRewardsUI(true).create());
+        BaseMod.addEvent(new AddEventParams.Builder(ColosseumSE.ID, ColosseumSE.class)
+                .eventType(EventUtils.EventType.NORMAL).spawnCondition(() -> AbstractDungeon.ascensionLevel >= 20)
+                .bonusCondition(() -> AbstractDungeon.currMapNode != null && AbstractDungeon.currMapNode.y > AbstractDungeon.map.size() / 2)
+                .dungeonID(CityDepths.ID).endsWithRewardsUI(true).create());
         addMonsters();
+    
+        CustomDungeon.addAct(TheEnding.ID, new CityDepths());
+    }
+    
+    @Override
+    public void receiveStartGame() {
+        if (!CardCrawlGame.loadingSave) {
+            if (ApoDropped) ApoDropped = false;
+            if (ShieldAndSpearExisting) ShieldAndSpearExisting = false;
+        }
+    }
+    
+    @Override
+    public void receiveEditRelics() {
+        BaseMod.addRelic(new SERBarricade(), RelicType.SHARED);
+        BaseMod.addRelic(new SERInvitation(), RelicType.SHARED);
+    }
+    
+    @Override
+    public void receiveEditCards() {
+        BaseMod.addCard(new WatcherOne());
+        BaseMod.addCard(new WatcherTwo());
+        BaseMod.addCard(new WatcherThree());
+        BaseMod.addCard(new WatcherFour());
+    }
+    
+    @Override
+    public void receiveAddAudio() {
+        BaseMod.addAudio(King.MakeID("RECRUIT_SOUND_0"), "SEAssets/audio/新兵老兵语音/Barrack_Ready.ogg");
+        BaseMod.addAudio(King.MakeID("RECRUIT_SOUND_1"), "SEAssets/audio/新兵老兵语音/Barrack_Taunt1.ogg");
+        BaseMod.addAudio(King.MakeID("RECRUIT_SOUND_2"), "SEAssets/audio/新兵老兵语音/Barrack_Taunt2.ogg");
+        BaseMod.addAudio(King.MakeID("BOSS_KING_SOUND_0"), "SEAssets/audio/国王语音/KingDenas-01d.ogg");
+        BaseMod.addAudio(King.MakeID("BOSS_KING_SOUND_1"), "SEAssets/audio/国王语音/KingDenas-02d.ogg");
+        BaseMod.addAudio(King.MakeID("BOSS_KING_SOUND_2"), "SEAssets/audio/国王语音/KingDenas-03g.ogg");
+        BaseMod.addAudio(King.MakeID("BOSS_KING_SOUND_3"), "SEAssets/audio/国王语音/KingDenas-04e.ogg");
+        BaseMod.addAudio(King.MakeID("BOSS_KING_SOUND_4"), "SEAssets/audio/国王语音/KingDenas_sfx_attack.ogg");
+        BaseMod.addAudio(King.MakeID("BOSS_KING_SOUND_5"), "SEAssets/audio/国王语音/KingDenas_sfx_order1.ogg");
+        BaseMod.addAudio(King.MakeID("BOSS_KING_SOUND_6"), "SEAssets/audio/国王语音/KingDenas_sfx_order3.ogg");
+    }
+    
+    @Override
+    public void receivePostExhaust(AbstractCard card) {
+        if (AbstractDungeon.getMonsters() != null) {
+            for (AbstractMonster m : LMSK.GetAllExptMstr(c -> !c.powers.isEmpty())) {
+                for (AbstractPower p : m.powers) {
+                    if (p instanceof AbstractSEPower)
+                        ((AbstractSEPower) p).onPlayerExhaustCard(card);
+                }
+            }
+        }
     }
     
     private static void addMonsters() {
@@ -174,7 +249,7 @@ public class King implements EditStringsSubscriber, PostInitializeSubscriber, St
         BaseMod.addMonster(Encounter.TRANSIENT_EXORDIUM, () -> Populate(new TransientSE()));
         BaseMod.addMonster(Encounter.THREE_LOUSE_ENC, () -> Populate(new LouseDefensive(-350F, 25F), new RedLouseSE(-125F, 10F),
                 new LouseNormal(80F, 30F)));
-    
+        
         // the city
         BaseMod.addEliteEncounter(TheCity.ID, new MonsterInfo(MonsterHelper.GREMLIN_LEADER_ENC, 1F));
         ReflectionHacks.RStaticMethod spawnGremlin = ReflectionHacks.privateStaticMethod(MonsterHelper.class,
@@ -213,15 +288,15 @@ public class King implements EditStringsSubscriber, PostInitializeSubscriber, St
         }));
         BaseMod.addEliteEncounter(TheCity.ID, new MonsterInfo(Encounter.WRITHING_MASS_CITY, 1F));
         BaseMod.addMonster(Encounter.WRITHING_MASS_CITY, () -> Populate(new WrithingMassSE()));
-        BaseMod.addMonster(Encounter.THREE_BYRDS_ENC, () -> Populate(new Byrd(-360F, MathUtils.random(25F, 70F)), 
+        BaseMod.addMonster(Encounter.THREE_BYRDS_ENC, () -> Populate(new Byrd(-360F, MathUtils.random(25F, 70F)),
                 new ByrdSE(-80F, MathUtils.random(25F, 70F)), new Byrd(200F, MathUtils.random(25F, 70F))));
-    
+        
         // the beyond
         BaseMod.addStrongMonsterEncounter(TheBeyond.ID, new MonsterInfo(Encounter.SNECKO_AND_CHOSEN, 1.6F));
         BaseMod.addMonster(Encounter.SNECKO_AND_CHOSEN, () -> Populate(new Snecko(-400F, 20F), new Chosen(-50F, 10F)));
         BaseMod.addStrongMonsterEncounter(TheBeyond.ID, new MonsterInfo(Encounter.SPIRE_CREATIONS, 1.6F));
         BaseMod.addMonster(Encounter.SPIRE_CREATIONS, () -> Populate(new Sentry(-580F, MathUtils.random(-10F, 15F)),
-                new SphericGuardian(-280F, MathUtils.random(-15F, 10F)), new OrbWalker(-150F, MathUtils.random(0F, 25F))));
+                new SphericGuardian(-280F, MathUtils.random(-15F, 10F)), new OrbWalker(50F, MathUtils.random(0F, 25F))));
         BaseMod.addStrongMonsterEncounter(TheBeyond.ID, new MonsterInfo(Encounter.SUPER_GUARDIAN, 1.6F));
         BaseMod.addMonster(Encounter.SUPER_GUARDIAN, () -> Populate(new SphericGuardian(){
             @Override
@@ -241,27 +316,21 @@ public class King implements EditStringsSubscriber, PostInitializeSubscriber, St
         }));
         BaseMod.addStrongMonsterEncounter(TheBeyond.ID, new MonsterInfo(Encounter.TEST_MONSTER, 4.27F));
         BaseMod.addMonster(Encounter.TEST_MONSTER, () -> Populate(new TestMonster(0F, 0F)));
-        BaseMod.addMonster(Encounter.THREE_DARKLINGS_ENC, () -> Populate(new Darkling(-440F, 10F), new DarklingSE(-140F, 30F), 
+        BaseMod.addMonster(Encounter.THREE_DARKLINGS_ENC, () -> Populate(new Darkling(-440F, 10F), new DarklingSE(-140F, 30F),
                 new Darkling(180F, -5F)));
         
         // the ending
         BaseMod.addMonster(Encounter.TWO_TEST_MONSTER, () -> Populate(new TestMonster(-500F, 0F), new TestMonster(0F, 0F)));
-        BaseMod.addMonster(Encounter.LOUSE_BYRD_DARKLING, () -> Populate(new RedLouseSE(-580F, MathUtils.random(-20F, 20F)), 
+        BaseMod.addMonster(Encounter.LOUSE_BYRD_DARKLING, () -> Populate(new RedLouseSE(-580F, MathUtils.random(-20F, 20F)),
                 new ByrdSE(-240F, MathUtils.random(25F, 70F)), new DarklingSE(120F, -5F)));
-    }
-    
-    @Override
-    public void receiveStartGame() {
-        if (!CardCrawlGame.loadingSave) {
-            if (ApoDropped) ApoDropped = false;
-            if (ShieldAndSpearExisting) ShieldAndSpearExisting = false;
-        }
-    }
-    
-    @Override
-    public void receiveEditRelics() {
-        BaseMod.addRelic(new SERBarricade(), RelicType.SHARED);
-        BaseMod.addRelic(new SERInvitation(), RelicType.SHARED);
+        
+        // city depths
+        BaseMod.addMonster(Encounter.CITY_DEPTHS_ELITE, () -> Populate(new Recruit(-440F, MathUtils.random(20F, 50F), true), 
+                new SlaverElite(-150F, MathUtils.random(-15F, 0F), true), new SlaverRedElite(170F, 10F, true)));
+        BaseMod.addBoss(CityDepths.ID, BossKing.ID, "SEAssets/images/ui/map/boss/kingIcon.png", "SEAssets/images/ui/map/boss/kingIcon.png");
+        BaseMod.addMonster(BossKing.ID, () -> Populate(new Paladin(BossKing.PALADIN_OFFSET_X, BossKing.PALADIN_OFFSET_Y), 
+                new BossKing(BossKing.BOSS_KING_OFFSET_X, BossKing.BOSS_KING_OFFSET_Y),
+                new Recruit(BossKing.RECRUIT_OFFSET_X, BossKing.RECRUIT_OFFSET_Y, false)));
     }
     
     @NotNull
@@ -284,5 +353,6 @@ public class King implements EditStringsSubscriber, PostInitializeSubscriber, St
         public static final String THREE_DARKLINGS_ENC = "SE 3 Darklings";
         public static final String TWO_TEST_MONSTER = "SE Two Test Monster";
         public static final String LOUSE_BYRD_DARKLING = "SE Louse Byrd Darkling";
+        public static final String CITY_DEPTHS_ELITE = "The Depths Elites";
     }
 }

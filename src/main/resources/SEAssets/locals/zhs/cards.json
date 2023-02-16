@@ -2,5 +2,22 @@
   "strong:HeartOfSpire": {
     "NAME": "高塔之心",
     "DESCRIPTION": "消耗 时，受到10点伤害。 NL 消耗"
+  },
+  "strong:WatcherOne": {
+    "NAME": "观者1",
+    "DESCRIPTION": "给予 !M! 虚弱 !M! 易伤 。",
+    "UPGRADE_DESCRIPTION": "给予 !M! 虚弱 !M! 易伤 3 以手。"
+  },
+  "strong:WatcherTwo": {
+    "NAME": "观者2",
+    "DESCRIPTION": "获得 !B! 格挡 ，你每次转换 姿态时，将这张牌从弃牌堆或抽牌堆放回你的手牌"
+  },
+  "strong:WatcherThree": {
+    "NAME": "观者3",
+    "DESCRIPTION": "每回合中，你每次打出一张攻击牌，获得 !M! 点临时 力量 ，你每次打出一张技能牌，获得 !M! 点临时 敏捷 。"
+  },
+  "strong:WatcherFour": {
+    "NAME": "观者4",
+    "DESCRIPTION": "翻倍你的 力量 和 敏捷 ，结束你的回合。 NL 消耗"
   }
 }

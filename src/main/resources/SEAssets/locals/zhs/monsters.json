@@ -1,0 +1,42 @@
+{
+  "strong:Recruit": {
+    "NAME": "新兵",
+    "MOVES": [],
+    "DIALOG": ["死亡后将一张交锋塞入抽牌堆，并在下个回合召唤新兵"]
+  },
+  "strong:SlaverBoss": {
+    "NAME": "精英奴隶",
+    "MOVES": [],
+    "DIALOG": ["死亡后将两张伤口塞入抽牌堆，并在下个回合召唤老兵"]
+  },
+  "strong:SlaverRed": {
+    "NAME": "精英红衣",
+    "MOVES": [],
+    "DIALOG": ["死亡后给予 #b2 #y缠身 ，并在下回合召唤精英蓝衣"]
+  },
+  "strong:Veteran": {
+    "NAME": "老兵",
+    "MOVES": [],
+    "DIALOG": ["死亡后给予 #b2 #y缠身 ，并在下回合召唤精英蓝衣"]
+  },
+  "strong:SlaverBlue": {
+    "NAME": "精英蓝衣",
+    "MOVES": [],
+    "DIALOG": ["死亡后给予 #b2 #y缠身 ，并在下回合召唤精英蓝衣"]
+  },
+  "strong:BossKing": {
+    "NAME": "国王",
+    "MOVES": [],
+    "DIALOG": ["为了王国","为了我","给我上","死"]
+  },
+  "strong:Paladin": {
+    "NAME": "圣骑士",
+    "MOVES": [],
+    "DIALOG": ["为了王国","为了我","给我上","死"]
+  },
+  "strong:KingdomChamp": {
+    "NAME": "王国勇士",
+    "MOVES": [],
+    "DIALOG": ["为了王国","为了我","给我上","死"]
+  }
+}

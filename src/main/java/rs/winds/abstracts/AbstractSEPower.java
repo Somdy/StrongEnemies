@@ -2,6 +2,7 @@ package rs.winds.abstracts;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.core.AbstractCreature;
 import com.megacrit.cardcrawl.helpers.ImageMaster;
 import com.megacrit.cardcrawl.localization.PowerStrings;
@@ -162,4 +163,5 @@ public abstract class AbstractSEPower extends LMCustomPower {
     }
     
     public void onMonsterDeath(AbstractMonster target) {}
+    public void onPlayerExhaustCard(AbstractCard card) {}
 }

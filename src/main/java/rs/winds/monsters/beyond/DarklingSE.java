@@ -57,6 +57,7 @@ public class DarklingSE extends AbstractMonster implements LMGameGeneralUtils {
         addPower(new BufferPower(this, 1));
         addPower(new PhysicalReboundPower(this));
         addPower(new SpellReboundPower(this));
+        addPower(new TimeMazePower(this, 15));
     }
     
     @Override
@@ -107,7 +108,7 @@ public class DarklingSE extends AbstractMonster implements LMGameGeneralUtils {
                 } else {
                     addToBot(new SFXAction("DARKLING_REGROW_1", MathUtils.random(-0.1F, 0.1F)));
                 }
-                addToBot(new HealAction(this, this, maxHealth / 2));
+                addToBot(new HealAction(this, this, maxHealth));
                 addToBot(new ChangeStateAction(this, "REVIVE"));
                 for (AbstractRelic r : LMSK.Player().relics)
                     r.onSpawnMonster(this);
