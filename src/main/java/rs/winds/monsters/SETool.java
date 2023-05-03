@@ -1,11 +1,14 @@
 package rs.winds.monsters;
 
 import basemod.ReflectionHacks;
+import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.cards.DamageInfo;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.monsters.AbstractMonster;
 import com.megacrit.cardcrawl.random.Random;
 import org.jetbrains.annotations.NotNull;
+import rs.winds.cards.AbstractCardPatch;
+import rs.winds.cards.CardEditor;
 
 public interface SETool {
     
@@ -23,6 +26,37 @@ public interface SETool {
     
     static Random MonsterAIRng() {
         return AbstractDungeon.aiRng;
+    }
+    
+    static CardEditor GetEditor(AbstractCard c) {
+        return AbstractCardPatch.TrackerField.cTracker.get(c);
+    }
+    
+    @NotNull
+    static CardEditor GetModifierEditor(AbstractCard c) {
+        CardEditor tracker = AbstractCardPatch.TrackerField.cTracker.get(c);
+        if (!tracker.isAssigned())
+            tracker.assign(c);
+        return tracker.modify(true);
+    }
+    
+    static void updateCardDesc(AbstractCard card, String desc) {
+        updateCardText(card, null, desc);
+    }
+    
+    static void updateCardText(@NotNull AbstractCard card, String name, String desc) {
+        if (name != null) {
+            card.name = name;
+            getMethod(AbstractCard.class, "initializeTitle").invoke(card);
+        }
+        if (desc != null) {
+            card.rawDescription = desc;
+            card.initializeDescription();
+        }
+    }
+    
+    static void upgradeCardName(AbstractCard card) {
+        getMethod(AbstractCard.class, "upgradeName").invoke(card);
     }
     
     static MonsterEditor GetEditor(AbstractMonster m) {

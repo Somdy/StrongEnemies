@@ -160,7 +160,7 @@ public class EditStartingRelicManaged {
             CtMethod abspd = ctClass.getDeclaredMethod("atBattleStartPreDraw");
             ctClass.removeMethod(abspd);
             CtMethod ats = CtNewMethod.make(CtClass.voidType, "atTurnStart", new CtClass[0], null,
-                    "{" + PureWaterSE.class.getName() + ".PureWaterTurnStart($0);}", ctClass);
+                    "{" + HolyWaterSE.class.getName() + ".PureWaterTurnStart($0);}", ctClass);
             ctClass.addMethod(ats);
         }
         

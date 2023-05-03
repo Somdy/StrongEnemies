@@ -1,0 +1,237 @@
+
+WisdomTree.png
+size: 1024,2048
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+WisdomTree/TreeBody
+  rotate: false
+  xy: 1, 1
+  size: 806, 545
+  orig: 806, 545
+  offset: 0, 0
+  index: -1
+WisdomTree/Grass
+  rotate: false
+  xy: 1, 548
+  size: 800, 207
+  orig: 800, 207
+  offset: 0, 0
+  index: -1
+WisdomTree/TreeFeet
+  rotate: false
+  xy: 1, 757
+  size: 482, 165
+  orig: 482, 165
+  offset: 0, 0
+  index: -1
+WisdomTree/Leaf1
+  rotate: false
+  xy: 145, 1004
+  size: 34, 39
+  orig: 34, 39
+  offset: 0, 0
+  index: -1
+WisdomTree/Leaf2
+  rotate: false
+  xy: 868, 1156
+  size: 36, 43
+  orig: 36, 43
+  offset: 0, 0
+  index: -1
+WisdomTree/Leaf3
+  rotate: false
+  xy: 868, 1111
+  size: 36, 43
+  orig: 36, 43
+  offset: 0, 0
+  index: -1
+WisdomTree/Wicker1
+  rotate: false
+  xy: 928, 380
+  size: 58, 377
+  orig: 58, 377
+  offset: 0, 0
+  index: -1
+WisdomTree/Wicker2
+  rotate: false
+  xy: 928, 1
+  size: 58, 377
+  orig: 58, 377
+  offset: 0, 0
+  index: -1
+WisdomTree/Wicker3
+  rotate: false
+  xy: 803, 548
+  size: 66, 429
+  orig: 66, 429
+  offset: 0, 0
+  index: -1
+WisdomTree/Wicker8
+  rotate: false
+  xy: 871, 451
+  size: 49, 289
+  orig: 49, 289
+  offset: 0, 0
+  index: -1
+WisdomTree/Wicker5
+  rotate: false
+  xy: 870, 1
+  size: 56, 448
+  orig: 56, 448
+  offset: 0, 0
+  index: -1
+WisdomTree/Wicker6
+  rotate: false
+  xy: 652, 757
+  size: 56, 448
+  orig: 56, 448
+  offset: 0, 0
+  index: -1
+WisdomTree/Wicker7
+  rotate: false
+  xy: 809, 1
+  size: 59, 474
+  orig: 59, 474
+  offset: 0, 0
+  index: -1
+WisdomTree/Wicker9
+  rotate: false
+  xy: 906, 891
+  size: 55, 320
+  orig: 55, 320
+  offset: 0, 0
+  index: -1
+WisdomTree/Wicker4
+  rotate: false
+  xy: 710, 757
+  size: 54, 434
+  orig: 54, 434
+  offset: 0, 0
+  index: -1
+WisdomTree/LeafBunch1
+  rotate: false
+  xy: 1, 1222
+  size: 112, 99
+  orig: 112, 99
+  offset: 0, 0
+  index: -1
+WisdomTree/LeafBunch2
+  rotate: false
+  xy: 260, 1156
+  size: 117, 89
+  orig: 117, 89
+  offset: 0, 0
+  index: -1
+WisdomTree/LeafBunch3
+  rotate: false
+  xy: 868, 1213
+  size: 129, 121
+  orig: 129, 121
+  offset: 0, 0
+  index: -1
+WisdomTree/LeafBunch4
+  rotate: false
+  xy: 353, 924
+  size: 126, 119
+  orig: 126, 119
+  offset: 0, 0
+  index: -1
+WisdomTree/LeafBunch5
+  rotate: false
+  xy: 1, 924
+  size: 220, 78
+  orig: 220, 78
+  offset: 0, 0
+  index: -1
+WisdomTree/LeafBunch6
+  rotate: false
+  xy: 141, 1154
+  size: 117, 110
+  orig: 117, 110
+  offset: 0, 0
+  index: -1
+WisdomTree/LeafBunch7
+  rotate: false
+  xy: 428, 1059
+  size: 192, 68
+  orig: 192, 68
+  offset: 0, 0
+  index: -1
+WisdomTree/LeafBunch8
+  rotate: false
+  xy: 428, 1129
+  size: 190, 67
+  orig: 190, 67
+  offset: 0, 0
+  index: -1
+WisdomTree/LeafBunch9
+  rotate: false
+  xy: 223, 924
+  size: 128, 120
+  orig: 128, 120
+  offset: 0, 0
+  index: -1
+WisdomTree/LeafBunch10
+  rotate: false
+  xy: 766, 979
+  size: 138, 130
+  orig: 138, 130
+  offset: 0, 0
+  index: -1
+WisdomTree/LeafBunch11
+  rotate: false
+  xy: 871, 759
+  size: 138, 130
+  orig: 138, 130
+  offset: 0, 0
+  index: -1
+WisdomTree/LeafBunch12
+  rotate: false
+  xy: 485, 914
+  size: 158, 143
+  orig: 158, 143
+  offset: 0, 0
+  index: -1
+WisdomTree/LeafBunch13
+  rotate: false
+  xy: 1, 1112
+  size: 138, 108
+  orig: 138, 108
+  offset: 0, 0
+  index: -1
+WisdomTree/LeafBunch14
+  rotate: false
+  xy: 1, 1004
+  size: 142, 106
+  orig: 142, 106
+  offset: 0, 0
+  index: -1
+WisdomTree/LeafBunch15
+  rotate: false
+  xy: 288, 1046
+  size: 138, 108
+  orig: 138, 108
+  offset: 0, 0
+  index: -1
+WisdomTree/LeafBunch16
+  rotate: false
+  xy: 145, 1046
+  size: 141, 106
+  orig: 141, 106
+  offset: 0, 0
+  index: -1
+WisdomTree/LeafBunch17
+  rotate: false
+  xy: 710, 1193
+  size: 156, 122
+  orig: 156, 122
+  offset: 0, 0
+  index: -1
+WisdomTree/LeafBunch18
+  rotate: false
+  xy: 485, 757
+  size: 165, 155
+  orig: 165, 155
+  offset: 0, 0
+  index: -1

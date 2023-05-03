@@ -1,5 +1,6 @@
 package rs.winds.powers;
 
+import com.megacrit.cardcrawl.actions.AbstractGameAction;
 import com.megacrit.cardcrawl.actions.common.ApplyPowerAction;
 import com.megacrit.cardcrawl.actions.common.GainBlockAction;
 import com.megacrit.cardcrawl.cards.DamageInfo;
@@ -7,6 +8,7 @@ import com.megacrit.cardcrawl.monsters.AbstractMonster;
 import com.megacrit.cardcrawl.powers.AbstractPower;
 import com.megacrit.cardcrawl.powers.RegenerateMonsterPower;
 import com.megacrit.cardcrawl.powers.StrengthPower;
+import com.megacrit.cardcrawl.vfx.combat.FlashAtkImgEffect;
 import rs.winds.abstracts.AbstractSEPower;
 import rs.winds.core.King;
 
@@ -34,7 +36,9 @@ public class LifeCounterPower extends AbstractSEPower {
             if (count > 0) {
                 addToBot(new ApplyPowerAction(owner, owner, new StrengthPower(owner, 3 * count)));
                 addToBot(new ApplyPowerAction(owner, owner, new RegenerateMonsterPower((AbstractMonster) owner, 3 * count)));
-                addToBot(new GainBlockAction(owner, owner, 10 * count));
+//                addToBot(new GainBlockAction(owner, owner, 10 * count));
+                effectToList(new FlashAtkImgEffect(owner.hb.cX, owner.hb.cY, AbstractGameAction.AttackEffect.SHIELD));
+                owner.addBlock(10 * count);
             }
         }
         return super.onAttacked(info, damageAmount);

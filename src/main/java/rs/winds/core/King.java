@@ -15,6 +15,7 @@ import com.megacrit.cardcrawl.actions.common.ApplyPowerAction;
 import com.megacrit.cardcrawl.actions.common.GainBlockAction;
 import com.megacrit.cardcrawl.actions.common.RollMoveAction;
 import com.megacrit.cardcrawl.cards.AbstractCard;
+import com.megacrit.cardcrawl.core.AbstractCreature;
 import com.megacrit.cardcrawl.core.CardCrawlGame;
 import com.megacrit.cardcrawl.core.Settings;
 import com.megacrit.cardcrawl.dungeons.*;
@@ -31,34 +32,47 @@ import com.megacrit.cardcrawl.monsters.city.*;
 import com.megacrit.cardcrawl.monsters.exordium.*;
 import com.megacrit.cardcrawl.powers.*;
 import com.megacrit.cardcrawl.rewards.RewardSave;
+import com.megacrit.cardcrawl.rooms.AbstractRoom;
 import org.jetbrains.annotations.NotNull;
 import rs.lazymankits.LMDebug;
+import rs.lazymankits.abstracts.DamageInfoTag;
 import rs.lazymankits.utils.LMSK;
 import rs.winds.abstracts.AbstractSEPower;
+import rs.winds.cards.silent.AlwaysPrepared;
 import rs.winds.cards.watcher.WatcherFour;
 import rs.winds.cards.watcher.WatcherOne;
 import rs.winds.cards.watcher.WatcherThree;
 import rs.winds.cards.watcher.WatcherTwo;
 import rs.winds.dungeons.CityDepths;
+import rs.winds.dungeons.RootDepths;
 import rs.winds.events.ColosseumSE;
 import rs.winds.monsters.beyond.DarklingSE;
 import rs.winds.monsters.beyond.TestMonster;
+import rs.winds.monsters.beyond.TestMonsterEx;
 import rs.winds.monsters.city.ByrdSE;
 import rs.winds.monsters.city.WrithingMassSE;
 import rs.winds.monsters.citydepths.*;
+import rs.winds.monsters.ending.EvilGod;
 import rs.winds.monsters.exordium.RedLouseSE;
 import rs.winds.monsters.exordium.TransientSE;
+import rs.winds.monsters.rootdepths.SnakePlantGreenRD;
+import rs.winds.monsters.rootdepths.SnakePlantPurpleRD;
+import rs.winds.monsters.rootdepths.TheHolyTree;
 import rs.winds.patches.SEEnums;
+import rs.winds.powers.SECuriosityPower;
+import rs.winds.powers.guniques.GodVisionPower;
 import rs.winds.relics.SERBarricade;
 import rs.winds.relics.SERInvitation;
 import rs.winds.rewards.ApoReward;
+import rs.winds.rewards.NightmareReward;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @SpireInitializer
 public class King implements EditStringsSubscriber, PostInitializeSubscriber, StartGameSubscriber, CustomSavable<Map<String, String>>, 
-        EditRelicsSubscriber, AddAudioSubscriber, PostExhaustSubscriber, EditCardsSubscriber {
+        EditRelicsSubscriber, AddAudioSubscriber, PostExhaustSubscriber, EditCardsSubscriber, PostDungeonUpdateSubscriber, 
+        OnPowersModifiedSubscriber, OnPlayerTurnStartPostDrawSubscriber {
     public static final String MOD_ID = "StrongEnemies";
     public static final String MOD_NAME = "Strong Enemies";
     public static final String[] AUTHORS = {"Somdy", "The World"};
@@ -68,6 +82,10 @@ public class King implements EditStringsSubscriber, PostInitializeSubscriber, St
     public static boolean ApoDropped = false;
     public static boolean ShieldAndSpearExisting = false;
     public static boolean DepthsElitesAllFinished = true;
+    
+    public static final DamageInfoTag IGNORE_INTANGIBLE = new DamageInfoTag("SE_IGNORE_INTANGIBLE_TAG");
+    
+    public static int PlayerBarricadeBlockLastTurn = 0;
     
     public static void initialize() {
         King instance = new King();
@@ -172,6 +190,8 @@ public class King implements EditStringsSubscriber, PostInitializeSubscriber, St
     public void receivePostInitialize() {
         BaseMod.registerCustomReward(SEEnums.ApoRewardType, load -> new ApoReward(), 
                 save -> new RewardSave(save.type.toString(), "SE_ApoReward"));
+        BaseMod.registerCustomReward(SEEnums.NightmareRewardType, load -> new NightmareReward(), 
+                save -> new RewardSave(save.type.toString(), "SE_NightmareReward"));
         
         BaseMod.addEvent(new AddEventParams.Builder(ColosseumSE.ID, ColosseumSE.class)
                 .eventType(EventUtils.EventType.OVERRIDE).overrideEvent(Colosseum.ID)
@@ -188,13 +208,19 @@ public class King implements EditStringsSubscriber, PostInitializeSubscriber, St
                 .eventType(EventUtils.EventType.NORMAL).spawnCondition(() -> AbstractDungeon.ascensionLevel >= 20)
                 .bonusCondition(() -> AbstractDungeon.currMapNode != null && AbstractDungeon.currMapNode.y > AbstractDungeon.map.size() / 2)
                 .dungeonID(CityDepths.ID).endsWithRewardsUI(true).create());
+        BaseMod.addEvent(new AddEventParams.Builder(ColosseumSE.ID, ColosseumSE.class)
+                .eventType(EventUtils.EventType.NORMAL).spawnCondition(() -> AbstractDungeon.ascensionLevel >= 20)
+                .bonusCondition(() -> AbstractDungeon.currMapNode != null && AbstractDungeon.currMapNode.y > AbstractDungeon.map.size() / 2)
+                .dungeonID(RootDepths.ID).endsWithRewardsUI(true).create());
         addMonsters();
     
         CustomDungeon.addAct(TheEnding.ID, new CityDepths());
+        CustomDungeon.addAct(TheEnding.ID, new RootDepths());
     }
     
     @Override
     public void receiveStartGame() {
+        PlayerBarricadeBlockLastTurn = 0;
         if (!CardCrawlGame.loadingSave) {
             if (ApoDropped) ApoDropped = false;
             if (ShieldAndSpearExisting) ShieldAndSpearExisting = false;
@@ -213,6 +239,7 @@ public class King implements EditStringsSubscriber, PostInitializeSubscriber, St
         BaseMod.addCard(new WatcherTwo());
         BaseMod.addCard(new WatcherThree());
         BaseMod.addCard(new WatcherFour());
+        BaseMod.addCard(new AlwaysPrepared());
     }
     
     @Override
@@ -239,6 +266,42 @@ public class King implements EditStringsSubscriber, PostInitializeSubscriber, St
                 }
             }
         }
+    }
+    
+    @Override
+    public void receivePostDungeonUpdate() {
+        if (AbstractDungeon.getCurrRoom() != null && AbstractDungeon.getCurrRoom().phase == AbstractRoom.RoomPhase.COMBAT) {
+            for (AbstractCreature c : LMSK.GetAllExptCreatures(c -> !c.isDeadOrEscaped())) {
+                SECuriosityPower.SECuriosityMark mark = SECuriosityPower.CuriosityField.MarkField.get(c);
+                if (mark != null) {
+                    boolean marked = mark.marked;
+                    boolean hasPower = c.powers.stream().anyMatch(p -> p instanceof SECuriosityPower);
+                    boolean removable = mark.removable();
+                    if (marked && !hasPower && !removable) {
+                        int amount = mark.amount;
+                        SECuriosityPower power = new SECuriosityPower(c, amount);
+                        c.powers.add(power);
+                    }
+                }
+            }
+        }
+    }
+    
+    @Override
+    public void receivePowersModified() {
+        for (AbstractMonster m : LMSK.GetAllExptMstr(m -> m instanceof EvilGod)) {
+            if (m instanceof EvilGod) {
+                ((EvilGod) m).onPowersModified();
+                AbstractPower p = m.getPower(GodVisionPower.ID);
+                if (p instanceof GodVisionPower) 
+                    ((GodVisionPower) p).updateOnPowersModified();
+            }
+        }
+    }
+    
+    @Override
+    public void receiveOnPlayerTurnStartPostDraw() {
+        PlayerBarricadeBlockLastTurn = LMSK.Player().currentBlock;
     }
     
     private static void addMonsters() {
@@ -315,12 +378,18 @@ public class King implements EditStringsSubscriber, PostInitializeSubscriber, St
             }
         }));
         BaseMod.addStrongMonsterEncounter(TheBeyond.ID, new MonsterInfo(Encounter.TEST_MONSTER, 4.27F));
-        BaseMod.addMonster(Encounter.TEST_MONSTER, () -> Populate(new TestMonster(0F, 0F)));
+        BaseMod.addMonster(Encounter.TEST_MONSTER, () -> Populate(new TestMonsterEx(0F, 0F)));
         BaseMod.addMonster(Encounter.THREE_DARKLINGS_ENC, () -> Populate(new Darkling(-440F, 10F), new DarklingSE(-140F, 30F),
                 new Darkling(180F, -5F)));
+    
+        // specials
+        BaseMod.addMonster(Encounter.TEST_MONSTER_EX, () -> Populate(new Cultist(-420F, 0F), new Cultist(-180F, 0F), 
+                new TestMonsterEx(0F, 0F)));
+        BaseMod.addMonster(Encounter.TWO_TEST_MONSTER_EX, () -> Populate(new TestMonsterEx(-230F, 0F), new TestMonsterEx(60F, 0F)));
+        BaseMod.addMonster(EvilGod.ID, () -> Populate(new EvilGod(EvilGod.MAIN_OFFSET_X, 0)));
         
         // the ending
-        BaseMod.addMonster(Encounter.TWO_TEST_MONSTER, () -> Populate(new TestMonster(-500F, 0F), new TestMonster(0F, 0F)));
+        BaseMod.addMonster(Encounter.TWO_TEST_MONSTER, () -> Populate(new TestMonsterEx(-500F, 0F), new TestMonsterEx(0F, 0F)));
         BaseMod.addMonster(Encounter.LOUSE_BYRD_DARKLING, () -> Populate(new RedLouseSE(-580F, MathUtils.random(-20F, 20F)),
                 new ByrdSE(-240F, MathUtils.random(25F, 70F)), new DarklingSE(120F, -5F)));
         
@@ -331,6 +400,12 @@ public class King implements EditStringsSubscriber, PostInitializeSubscriber, St
         BaseMod.addMonster(BossKing.ID, () -> Populate(new Paladin(BossKing.PALADIN_OFFSET_X, BossKing.PALADIN_OFFSET_Y), 
                 new BossKing(BossKing.BOSS_KING_OFFSET_X, BossKing.BOSS_KING_OFFSET_Y),
                 new Recruit(BossKing.RECRUIT_OFFSET_X, BossKing.RECRUIT_OFFSET_Y, false)));
+        
+        // root depths
+        BaseMod.addMonster(Encounter.ROOT_DEPTHS_ELITE, () -> Populate(new SnakePlantGreenRD(-350F, 0F), 
+                new SnakePlantPurpleRD(120F, 0F)));
+        BaseMod.addBoss(RootDepths.ID, TheHolyTree.ID, "SEAssets/images/ui/map/boss/treeIcon.png", "SEAssets/images/ui/map/boss/treeIcon.png");
+        BaseMod.addMonster(TheHolyTree.ID, () -> Populate(new TheHolyTree(0F, 0F)));
     }
     
     @NotNull
@@ -354,5 +429,8 @@ public class King implements EditStringsSubscriber, PostInitializeSubscriber, St
         public static final String TWO_TEST_MONSTER = "SE Two Test Monster";
         public static final String LOUSE_BYRD_DARKLING = "SE Louse Byrd Darkling";
         public static final String CITY_DEPTHS_ELITE = "The Depths Elites";
+        public static final String ROOT_DEPTHS_ELITE = "The Root Elites";
+        public static final String TEST_MONSTER_EX = TEST_MONSTER + " EX";
+        public static final String TWO_TEST_MONSTER_EX = TWO_TEST_MONSTER + " EX";
     }
 }

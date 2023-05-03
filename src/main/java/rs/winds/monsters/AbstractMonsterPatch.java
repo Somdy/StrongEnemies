@@ -39,7 +39,7 @@ public class AbstractMonsterPatch {
             ClassFilter alterFilter = new OrClassFilter(new AutoAdd.PackageFilter(SEVMonsterEditorManaged.class));
             ClassFilter classFilter = new AndClassFilter(alterFilter, new AnnotatedClassFilter(SEMonsterEditor.class, pool));
             int classesToEdit = finder.findClasses(classesFound, classFilter);
-            King.PatchLog("Found [" + classesToEdit + "] editor classes");
+            King.PatchLog("Found [" + classesToEdit + "] monster editor classes");
             if (!classesFound.isEmpty()) {
                 for (ClassInfo classInfo : classesFound) {
                     CtClass eClz = pool.get(classInfo.getClassName());
@@ -60,7 +60,7 @@ public class AbstractMonsterPatch {
         }
     }
     
-    protected static class AnnotatedClassFilter extends ClassModifiersClassFilter {
+    public static class AnnotatedClassFilter extends ClassModifiersClassFilter {
         private final Class<? extends Annotation> annotationClass;
         private final ClassPool pool;
         

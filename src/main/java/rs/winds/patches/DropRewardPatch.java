@@ -49,6 +49,7 @@ public class DropRewardPatch {
             };
         }
         public static void DropShieldAndSpearReward(AbstractRoom room) {
+            King.ShieldAndSpearExisting = false;
             room.addRelicToRewards(new SERBarricade());
         }
     }

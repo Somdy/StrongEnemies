@@ -14,9 +14,11 @@ import com.megacrit.cardcrawl.events.city.Colosseum;
 import com.megacrit.cardcrawl.helpers.MonsterHelper;
 import com.megacrit.cardcrawl.localization.EventStrings;
 import com.megacrit.cardcrawl.relics.AbstractRelic;
+import com.megacrit.cardcrawl.relics.CultistMask;
 import rs.lazymankits.utils.LMSK;
 import rs.winds.core.King;
 import rs.winds.dungeons.CityDepths;
+import rs.winds.dungeons.RootDepths;
 
 public class ColosseumSE extends AbstractImageEvent {
     public static final String ID = King.MakeID(Colosseum.ID);
@@ -57,8 +59,12 @@ public class ColosseumSE extends AbstractImageEvent {
                     phase = leave;
                     AbstractDungeon.getCurrRoom().monsters = MonsterHelper.getEncounter(getMonsters(1));
                     AbstractDungeon.getCurrRoom().rewards.clear();
-                    AbstractDungeon.getCurrRoom().addRelicToRewards(AbstractRelic.RelicTier.RARE);
-                    AbstractDungeon.getCurrRoom().addRelicToRewards(AbstractRelic.RelicTier.UNCOMMON);
+                    if (AbstractDungeon.actNum == 4) {
+                        AbstractDungeon.getCurrRoom().addRelicToRewards(new CultistMask());
+                    } else {
+                        AbstractDungeon.getCurrRoom().addRelicToRewards(AbstractRelic.RelicTier.RARE);
+                        AbstractDungeon.getCurrRoom().addRelicToRewards(AbstractRelic.RelicTier.UNCOMMON);
+                    }
                     AbstractDungeon.getCurrRoom().addGoldToRewards(100);
                     AbstractDungeon.getCurrRoom().eliteTrigger = true;
                     enterCombatFromImage();
@@ -80,7 +86,8 @@ public class ColosseumSE extends AbstractImageEvent {
                 return combat == 0 ? MonsterHelper.THREE_DARKLINGS_ENC : King.Encounter.THREE_DARKLINGS_ENC;
             case TheEnding.ID:
             case CityDepths.ID:
-                return combat == 0 ? King.Encounter.TWO_TEST_MONSTER : King.Encounter.LOUSE_BYRD_DARKLING;
+            case RootDepths.ID:
+                return combat == 0 ? King.Encounter.TEST_MONSTER_EX : King.Encounter.TWO_TEST_MONSTER_EX;
             default:
                 return combat == 0 ? MonsterHelper.THREE_LOUSE_ENC : King.Encounter.THREE_LOUSE_ENC;
         }

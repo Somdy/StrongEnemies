@@ -1,7 +1,6 @@
 package rs.winds.monsters;
 
 import basemod.BaseMod;
-import basemod.patches.com.megacrit.cardcrawl.screens.compendium.CardLibraryScreen.NoCompendium;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.MathUtils;
 import com.evacipated.cardcrawl.modthespire.lib.*;
@@ -47,12 +46,9 @@ import rs.lazymankits.abstracts.DamageInfoTag;
 import rs.lazymankits.actions.utility.QuickAction;
 import rs.lazymankits.utils.LMDamageInfoHelper;
 import rs.lazymankits.utils.LMSK;
-import rs.winds.cards.HeartOfSpire;
+import rs.winds.cards.status.HeartOfSpire;
 import rs.winds.core.King;
-import rs.winds.patches.DropRewardPatch;
-import rs.winds.powers.EntangleSkillPower;
-import rs.winds.powers.MawAngerPower;
-import rs.winds.powers.PowerStealerPower;
+import rs.winds.powers.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -2642,7 +2638,6 @@ public class SEVMonsterEditorManaged {
         private static final byte multi = 1;
         private static final byte buff = 2;
         private static final int multiCount = 5;
-        private static final DamageInfoTag IGNORE_INTANGIBLE = new DamageInfoTag("SE_THORNS_IGNORE_INTANGIBLE");
         public static void Edit(AbstractMonster _inst) {
             MonsterEditor e = GetModifierEditor(_inst);
             e.initFunc = m -> {
@@ -2754,8 +2749,8 @@ public class SEVMonsterEditorManaged {
                             public int onAttacked(DamageInfo info, int damageAmount) {
                                 if (info.type != DamageInfo.DamageType.THORNS && info.type != DamageInfo.DamageType.HP_LOSS && info.owner != null && info.owner != this.owner) {
                                     flash();
-                                    addToTop(new DamageAction(info.owner, LMDamageInfoHelper.Create(owner, amount, DamageInfo.DamageType.THORNS, IGNORE_INTANGIBLE.cpy()), 
-                                            AbstractGameAction.AttackEffect.SLASH_HORIZONTAL, true));
+                                    addToTop(new DamageAction(info.owner, LMDamageInfoHelper.Create(owner, amount, DamageInfo.DamageType.THORNS, 
+                                            King.IGNORE_INTANGIBLE.cpy()), AbstractGameAction.AttackEffect.SLASH_HORIZONTAL, true));
                                 }
                                 return damageAmount;
                             }
@@ -2821,22 +2816,6 @@ public class SEVMonsterEditorManaged {
                             m.addToBot(new EscapeAction(m));
                         }
                     }
-                }
-            }
-        }
-        @SpirePatch2(clz = AbstractPlayer.class, method = "damage")
-        public static class IgnorePlayerIntangiblePatch {
-            @SpireInsertPatch(locator = Locator.class, localvars = {"damageAmount"})
-            public static void Insert(AbstractPlayer __instance, DamageInfo info, @ByRef int[] damageAmount) {
-                if (__instance.hasPower(IntangiblePlayerPower.POWER_ID) && LMDamageInfoHelper.HasTag(info, IGNORE_INTANGIBLE)) {
-                    damageAmount[0] = info.output;
-                }
-            }
-            private static class Locator extends SpireInsertLocator {
-                @Override
-                public int[] Locate(CtBehavior ctBehavior) throws Exception {
-                    Matcher.MethodCallMatcher matcher = new Matcher.MethodCallMatcher(AbstractPlayer.class, "decrementBlock");
-                    return LineFinder.findInOrder(ctBehavior, matcher);
                 }
             }
         }
@@ -3075,6 +3054,7 @@ public class SEVMonsterEditorManaged {
                 m.damage.add(first_atk, new DamageInfo(m, 5));
                 m.damage.add(attack, new DamageInfo(m, 5));
                 m.addPower(new BufferPower(m, 3));
+                m.addPower(new BurntBurnPower(m, 2));
             };
             e.putBool("firstTurn", true);
             e.putBool("aloneBuff", false);
@@ -3146,6 +3126,18 @@ public class SEVMonsterEditorManaged {
         private static boolean alone(AbstractMonster self) {
             return LMSK.GetAllExptMstr(m -> m != self).size() <= 0;
         }
+        
+        @SpirePatch2(clz = AbstractMonster.class, method = "die", paramtypez = {boolean.class})
+        public static class DiePatch {
+            @SpirePostfixPatch
+            public static void Postfix(AbstractMonster __instance) {
+                if (__instance instanceof SpireSpear && __instance.isDying) {
+                    for (AbstractMonster m : LMSK.GetAllExptMstr(m -> m instanceof SpireShield)) {
+                        LMSK.AddToTop(new ApplyPowerAction(m, __instance, new BurntBurnPower(m, 99)));
+                    }
+                }
+            }
+        }
     }
     @SEMonsterEditor(m = SpireShield.class, hasExtraFunctions = true)
     public static class SpireShieldSE {
@@ -3165,6 +3157,7 @@ public class SEVMonsterEditorManaged {
                 m.damage.add(alone_1, new DamageInfo(m, 0));
                 m.addPower(new MetallicizePower(m, 10));
                 m.addPower(new BarricadePower(m));
+                m.addPower(new FeelingSamePower(m, 2));
             };
             e.preBattle = m -> {
                 m.addToBot(new GainBlockAction(m, m, 50));
@@ -3279,6 +3272,17 @@ public class SEVMonsterEditorManaged {
                 }
             }
         }
+        @SpirePatch2(clz = AbstractMonster.class, method = "die", paramtypez = {boolean.class})
+        public static class DiePatch {
+            @SpirePostfixPatch
+            public static void Postfix(AbstractMonster __instance) {
+                if (__instance instanceof SpireShield && __instance.isDying) {
+                    for (AbstractMonster m : LMSK.GetAllExptMstr(m -> m instanceof SpireSpear)) {
+                        LMSK.AddToTop(new ApplyPowerAction(m, __instance, new FeelingSamePower(m, 99)));
+                    }
+                }
+            }
+        }
     }
     @SEMonsterEditor(m = CorruptHeart.class)
     public static class CorruptHeartSE {
@@ -3293,6 +3297,7 @@ public class SEVMonsterEditorManaged {
                 m.damage.clear();
                 m.damage.add(bloods, new DamageInfo(m, 2));
                 m.damage.add(massive, new DamageInfo(m, 50));
+                m.addPower(new TreeImmunePower(m, 200));
                 m.addPower(new BeatOfDeathPower(m, 3));
                 m.addPower(new InvinciblePower(m, 50){
                     @Override
@@ -3302,10 +3307,9 @@ public class SEVMonsterEditorManaged {
                         super.stackPower(stackAmount);
                     }
                 });
-                m.addPower(new MetallicizePower(m, 5));
+                m.addPower(new ToughPower(m, 5, 5));
                 m.addPower(new ThornsPower(m, 3));
                 m.addPower(new RegenerateMonsterPower(m, 10));
-                m.addPower(new MalleablePower(m, 5));
                 m.addPower(new BarricadePower(m));
             };
             e.preBattle = m -> {

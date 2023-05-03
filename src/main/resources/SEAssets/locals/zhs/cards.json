@@ -18,6 +18,37 @@
   },
   "strong:WatcherFour": {
     "NAME": "观者4",
-    "DESCRIPTION": "翻倍你的 力量 和 敏捷 ，结束你的回合。 NL 消耗"
+    "DESCRIPTION": "受到 !D! 点伤害10次。翻倍你的 力量 和 敏捷 。",
+    "UPGRADE_DESCRIPTION": "受到 !D! 点伤害5次。翻倍你的 力量 和 敏捷 。"
+  },
+  "strong:Growth": {
+    "NAME": "生长",
+    "DESCRIPTION": "不能被打出，在你的回合结束时，为圣树回复1%的血量，被 消耗 时，为圣树回复1%的血量。",
+    "UPGRADE_DESCRIPTION": "不能被打出，在你的回合结束时，为圣树回复2%的血量，被 消耗 时，为圣树回复2%的血量。"
+  },
+  "strong:SpecialTreeAttack": {
+    "NAME": "只有风暴才能击倒大树",
+    "DESCRIPTION": "清除目标所有buff，并造成500点固定伤害（不受其他加成影响） NL 消耗",
+    "UPGRADE_DESCRIPTION": "清除目标所有buff，并造成500点固定伤害（不受其他加成影响） NL 消耗"
+  },
+  "strong:Acrobatics": {
+    "DESCRIPTION": "受到4点伤害。 NL 抽 !M! 张牌。 NL 丢弃 1 张牌。丢弃的牌视为打出"
+  },
+  "strong:Shiv": {
+    "DESCRIPTION": "造成 !D! 点伤害， 消耗 时获得 !D! 点 格挡 。 虚无 。数值只受精准影响，不再受 虚弱 易伤 力量 等影响。"
+  },
+  "strong:Eviscerate": {
+    "DESCRIPTION": "你在这个回合内每丢弃一张牌，耗能就减少1 [G] ，伤害增加 !M! 。 NL 失去3点生命。 NL 造成 !D! 点伤害三次。"
+  },
+  "strong:Bane": {
+    "DESCRIPTION": "造成 !D! 点伤害。 NL 如果敌人有 中毒 状态，再次造成等同于目标 中毒 层数的伤害。"
+  },
+  "strong:AlwaysPrepared": {
+    "NAME": "一直有准备",
+    "DESCRIPTION": "抽 !M! 张牌。 NL 丢弃 !M! 张牌。丢弃的牌视为打出。 NL 消耗 。"
+  },
+  "strong:CurseOfGod": {
+    "NAME": "神的诅咒",
+    "DESCRIPTION": "当此牌在你手中时，每打一张牌，都会将一张 *悔恨 放入你的抽牌堆，被 消耗 时，此牌变为 *悔恨 。 消耗 。"
   }
 }

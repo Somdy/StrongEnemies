@@ -22,7 +22,6 @@ import rs.lazymankits.utils.LMSK;
 import rs.winds.core.King;
 import rs.winds.monsters.SETool;
 import rs.winds.powers.AuthorityPower;
-import rs.winds.powers.HighSpellResistancePower;
 import rs.winds.powers.MidSpellResistancePower;
 import rs.winds.powers.SpotWeaknessPower;
 
@@ -31,7 +30,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-//TODO: Not done yet
 public class BossKing extends AbstractMonster {
     public static final String ID = King.MakeID("BossKing");
     private static final MonsterStrings strings = King.MonsterStrings(ID);

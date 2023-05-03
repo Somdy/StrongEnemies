@@ -3,6 +3,7 @@ package rs.winds.patches;
 import com.evacipated.cardcrawl.modthespire.lib.*;
 import com.megacrit.cardcrawl.cards.DamageInfo;
 import com.megacrit.cardcrawl.characters.AbstractPlayer;
+import com.megacrit.cardcrawl.core.AbstractCreature;
 import com.megacrit.cardcrawl.localization.LocalizedStrings;
 import com.megacrit.cardcrawl.localization.PowerStrings;
 import com.megacrit.cardcrawl.monsters.AbstractMonster;
@@ -12,6 +13,9 @@ import com.megacrit.cardcrawl.powers.IntangiblePower;
 import javassist.*;
 import javassist.bytecode.*;
 import javassist.convert.Transformer;
+import javassist.expr.ExprEditor;
+import javassist.expr.MethodCall;
+import rs.lazymankits.utils.LMDamageInfoHelper;
 import rs.winds.core.King;
 
 import java.util.Map;
@@ -35,6 +39,11 @@ public class IntangiblePowerPatch {
             @SpirePatch(clz = IntangiblePlayerPower.class, method = SpirePatch.CONSTRUCTOR)
     })
     public static class StackPowerPatch {
+        @SpirePostfixPatch
+        public static void ConstructorPostfix(AbstractPower _inst, AbstractCreature c, int turns) {
+            if (_inst.amount > 3)
+                _inst.amount = 3;
+        }
         @SpireRawPatch
         public static void Raw(CtBehavior ctBehavior) throws Exception {
             CtClass ctClass = ctBehavior.getDeclaringClass();
@@ -63,6 +72,20 @@ public class IntangiblePowerPatch {
     
     @SpirePatch(clz = AbstractPlayer.class, method = "damage")
     public static class PlayerDamagePatch {
+        @SpireInsertPatch(locator = Locator.class, localvars = {"damageAmount"})
+        public static void Insert(AbstractPlayer __instance, DamageInfo info, @ByRef int[] damageAmount) {
+            if (LMDamageInfoHelper.HasTag(info, King.IGNORE_INTANGIBLE)) {
+                damageAmount[0] = info.output;
+            }
+        }
+        private static class Locator extends SpireInsertLocator {
+            @Override
+            public int[] Locate(CtBehavior ctBehavior) throws Exception {
+                Matcher.MethodCallMatcher matcher = new Matcher.MethodCallMatcher(AbstractPlayer.class, "decrementBlock");
+                return LineFinder.findInOrder(ctBehavior, matcher);
+            }
+        }
+        
         @SpireRawPatch
         public static void Raw(CtBehavior ctBehavior) throws Exception {
             ctBehavior.instrument(new CodeConverter(){{
@@ -91,6 +114,11 @@ public class IntangiblePowerPatch {
     
     @SpirePatch(clz = AbstractMonster.class, method = "damage")
     public static class MonsterDamagePatch {
+        
+        public static boolean IgnoreIntangible(DamageInfo info) {
+            return LMDamageInfoHelper.HasTag(info, King.IGNORE_INTANGIBLE);
+        }
+        
         @SpireRawPatch
         public static void Raw(CtBehavior ctBehavior) throws Exception {
             ctBehavior.instrument(new CodeConverter(){{
@@ -124,6 +152,14 @@ public class IntangiblePowerPatch {
                     }
                 };
             }});
+            ctBehavior.instrument(new ExprEditor(){
+                @Override
+                public void edit(MethodCall m) throws CannotCompileException {
+                    if ("hasPower".equals(m.getMethodName())) {
+                        m.replace("{$_=$proceed($$) && !" + MonsterDamagePatch.class.getName() + ".IgnoreIntangible(info);}");
+                    }
+                }
+            });
         }
     }
 }

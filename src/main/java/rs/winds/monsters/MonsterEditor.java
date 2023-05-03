@@ -155,10 +155,10 @@ public class MonsterEditor {
             if (hasExtraFunctions) {
                 try {
                     CtMethod updateMethod = mClass.getDeclaredMethod("update");
-                    updateMethod.insertAfter("{" + getEditor + ".postUpdate();}");
+                    updateMethod.insertAfter("{if(" + getEditor + ".canModify()){" + getEditor + ".postUpdate();}}");
                 } catch (Exception ignore) {
                     CtMethod newUpdateMethod = CtNewMethod.make(CtClass.voidType, "update", new CtClass[0], null,
-                            "{super.update();" + getEditor + ".postUpdate();}", mClass);
+                            "{super.update();" + "if(" + getEditor + ".canModify()){" + getEditor + ".postUpdate();}}", mClass);
                     mClass.addMethod(newUpdateMethod);
                 }
             }
@@ -216,6 +216,7 @@ public class MonsterEditor {
         boolean getMove(AbstractMonster m, int roll);
     }
     
+    @FunctionalInterface
     public interface PostUpdateFunc {
         void postUpdate(AbstractMonster m);
     }

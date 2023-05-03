@@ -1,4 +1,4 @@
-package rs.winds.cards;
+package rs.winds.cards.status;
 
 import basemod.abstracts.CustomCard;
 import com.megacrit.cardcrawl.actions.AbstractGameAction;
@@ -17,7 +17,7 @@ public class HeartOfSpire extends CustomCard {
     
     public HeartOfSpire() {
         super(ID, strings.NAME, "SEAssets/images/cards/heartofspire.png", 1, strings.DESCRIPTION, CardType.STATUS, 
-                CardColor.COLORLESS, CardRarity.COMMON, CardTarget.SELF);
+                CardColor.COLORLESS, CardRarity.SPECIAL, CardTarget.SELF);
         exhaust = true;
     }
     
