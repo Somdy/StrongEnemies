@@ -2,6 +2,7 @@ package rs.winds.cards.curse;
 
 import com.evacipated.cardcrawl.modthespire.lib.*;
 import com.megacrit.cardcrawl.actions.common.MakeTempCardInDrawPileAction;
+import com.megacrit.cardcrawl.actions.common.MakeTempCardInHandAction;
 import com.megacrit.cardcrawl.actions.unique.LoseEnergyAction;
 import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.cards.CardGroup;
@@ -39,9 +40,14 @@ public class CurseOfGod extends AbstractSECard {
         }
     }
     
-    @SpirePatch(clz = CardGroup.class, method = "moveToExhaustPile")
+    @Override
+    public void triggerOnExhaust() {
+        addToBot(new MakeTempCardInHandAction(new Regret(), 1));
+    }
+    
+    //    @SpirePatch(clz = CardGroup.class, method = "moveToExhaustPile")
     public static class MoveToExhaustPilePatch {
-        @SpireInsertPatch(locator = Locator.class)
+//        @SpireInsertPatch(locator = Locator.class)
         public static void Insert(CardGroup _inst, @ByRef AbstractCard[] c) {
             if (c[0] instanceof CurseOfGod)
                 c[0] = new Regret();

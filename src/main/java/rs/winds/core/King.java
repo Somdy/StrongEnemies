@@ -4,6 +4,7 @@ import actlikeit.dungeons.CustomDungeon;
 import basemod.BaseMod;
 import basemod.ReflectionHacks;
 import basemod.abstracts.CustomSavable;
+import basemod.devcommands.ConsoleCommand;
 import basemod.eventUtil.AddEventParams;
 import basemod.eventUtil.EventUtils;
 import basemod.helpers.RelicType;
@@ -38,16 +39,17 @@ import rs.lazymankits.LMDebug;
 import rs.lazymankits.abstracts.DamageInfoTag;
 import rs.lazymankits.utils.LMSK;
 import rs.winds.abstracts.AbstractSEPower;
+import rs.winds.cards.curse.CurseOfGod;
 import rs.winds.cards.silent.AlwaysPrepared;
 import rs.winds.cards.watcher.WatcherFour;
 import rs.winds.cards.watcher.WatcherOne;
 import rs.winds.cards.watcher.WatcherThree;
 import rs.winds.cards.watcher.WatcherTwo;
+import rs.winds.core.commands.CheatCMD;
 import rs.winds.dungeons.CityDepths;
 import rs.winds.dungeons.RootDepths;
 import rs.winds.events.ColosseumSE;
 import rs.winds.monsters.beyond.DarklingSE;
-import rs.winds.monsters.beyond.TestMonster;
 import rs.winds.monsters.beyond.TestMonsterEx;
 import rs.winds.monsters.city.ByrdSE;
 import rs.winds.monsters.city.WrithingMassSE;
@@ -60,7 +62,7 @@ import rs.winds.monsters.rootdepths.SnakePlantPurpleRD;
 import rs.winds.monsters.rootdepths.TheHolyTree;
 import rs.winds.patches.SEEnums;
 import rs.winds.powers.SECuriosityPower;
-import rs.winds.powers.guniques.GodVisionPower;
+import rs.winds.powers.guniques.PowerLimitationPower;
 import rs.winds.relics.SERBarricade;
 import rs.winds.relics.SERInvitation;
 import rs.winds.rewards.ApoReward;
@@ -188,6 +190,7 @@ public class King implements EditStringsSubscriber, PostInitializeSubscriber, St
     
     @Override
     public void receivePostInitialize() {
+        ConsoleCommand.addCommand("sernitya", CheatCMD.class);
         BaseMod.registerCustomReward(SEEnums.ApoRewardType, load -> new ApoReward(), 
                 save -> new RewardSave(save.type.toString(), "SE_ApoReward"));
         BaseMod.registerCustomReward(SEEnums.NightmareRewardType, load -> new NightmareReward(), 
@@ -204,6 +207,10 @@ public class King implements EditStringsSubscriber, PostInitializeSubscriber, St
                 .eventType(EventUtils.EventType.NORMAL).spawnCondition(() -> AbstractDungeon.ascensionLevel >= 20)
                 .bonusCondition(() -> AbstractDungeon.currMapNode != null && AbstractDungeon.currMapNode.y > AbstractDungeon.map.size() / 2)
                 .dungeonID(TheBeyond.ID).endsWithRewardsUI(true).create());
+        BaseMod.addEvent(new AddEventParams.Builder(ColosseumSE.ID, ColosseumSE.class)
+                .eventType(EventUtils.EventType.NORMAL).spawnCondition(() -> AbstractDungeon.ascensionLevel >= 20)
+                .bonusCondition(() -> AbstractDungeon.currMapNode != null && AbstractDungeon.currMapNode.y > AbstractDungeon.map.size() / 2)
+                .dungeonID(TheEnding.ID).endsWithRewardsUI(true).create());
         BaseMod.addEvent(new AddEventParams.Builder(ColosseumSE.ID, ColosseumSE.class)
                 .eventType(EventUtils.EventType.NORMAL).spawnCondition(() -> AbstractDungeon.ascensionLevel >= 20)
                 .bonusCondition(() -> AbstractDungeon.currMapNode != null && AbstractDungeon.currMapNode.y > AbstractDungeon.map.size() / 2)
@@ -240,6 +247,8 @@ public class King implements EditStringsSubscriber, PostInitializeSubscriber, St
         BaseMod.addCard(new WatcherThree());
         BaseMod.addCard(new WatcherFour());
         BaseMod.addCard(new AlwaysPrepared());
+        
+        BaseMod.addCard(new CurseOfGod());
     }
     
     @Override
@@ -292,9 +301,9 @@ public class King implements EditStringsSubscriber, PostInitializeSubscriber, St
         for (AbstractMonster m : LMSK.GetAllExptMstr(m -> m instanceof EvilGod)) {
             if (m instanceof EvilGod) {
                 ((EvilGod) m).onPowersModified();
-                AbstractPower p = m.getPower(GodVisionPower.ID);
-                if (p instanceof GodVisionPower) 
-                    ((GodVisionPower) p).updateOnPowersModified();
+                AbstractPower p = m.getPower(PowerLimitationPower.ID);
+                if (p instanceof PowerLimitationPower) 
+                    ((PowerLimitationPower) p).updateOnPowersModified();
             }
         }
     }

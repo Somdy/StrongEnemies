@@ -50,6 +50,7 @@ import rs.lazymankits.actions.utility.QuickAction;
 import rs.lazymankits.utils.LMGameGeneralUtils;
 import rs.lazymankits.utils.LMSK;
 import rs.winds.core.King;
+import rs.winds.core.commands.CheatCMD;
 import rs.winds.dungeons.CityDepths;
 import rs.winds.dungeons.RootDepths;
 import rs.winds.monsters.SETool;
@@ -67,9 +68,11 @@ public class EvilGod extends AbstractMonster implements LMGameGeneralUtils {
     public static final float MAIN_OFFSET_X = -150F;
     public static final float LEFT_OFFSET_X = MAIN_OFFSET_X + 280F;
     public static final float RIGHT_OFFSET_X = MAIN_OFFSET_X - 280F;
+    public static boolean DEFEATED = false;
     private static final byte attack_0 = 0;
     private static final byte attack_1 = 1;
     private static final byte attack_2 = 2;
+    private static final int intent_0 = 3;
     private static final int atkCount_0 = 7;
     private static final int atkCount_1 = 5;
     private static final int atkCount_2 = 3;
@@ -91,21 +94,22 @@ public class EvilGod extends AbstractMonster implements LMGameGeneralUtils {
         e.setTime(e.getEndTime() * MathUtils.random());
         eye = skeleton.findBone("head");
         type = EnemyType.BOSS;
+        DEFEATED = false;
         beKilled = secondStage = false;
         minions.put(new Vector2(LEFT_OFFSET_X, 50F), null);
         minions.put(new Vector2(RIGHT_OFFSET_X, 50F), null);
         addInitialPower(new ArtifactPower(this, 3){
-//            @Override
-//            public void onSpecificTrigger() {
-//                super.onSpecificTrigger();
-//                if (owner instanceof EvilGod) {
-//                    if (amount <= 0) {
-//                        ((EvilGod) owner).perpetuals.removeIf(p -> p instanceof ArtifactPower);
-//                    }
-//                }
-//            }
+            @Override
+            public void onSpecificTrigger() {
+                super.onSpecificTrigger();
+                if (owner instanceof EvilGod) {
+                    if (amount <= 1) {
+                        ((EvilGod) owner).perpetuals.removeIf(p -> p instanceof ArtifactPower);
+                    }
+                }
+            }
         });
-        addInitialPower(new GodVisionPower(this).apply());
+        addInitialPower(new PowerLimitationPower(this).apply());
         addInitialPower(new CardLimitationPower(this));
         addInitialPower(new ConfessionPower(this, 200));
         addInitialPower(new ExtraIntentsPower(this));
@@ -113,8 +117,9 @@ public class EvilGod extends AbstractMonster implements LMGameGeneralUtils {
         addInitialPower(new MantraSEPower(this, 4, false));
         addInitialPower(new InvinciblePower(this, 200));
         damage.add(attack_0, new DamageInfo(this, 7));
-        damage.add(attack_1, new DamageInfo(this, 5));
+        damage.add(attack_1, new DamageInfo(this, 10));
         damage.add(attack_2, new DamageInfo(this, 30));
+        damage.add(intent_0, new DamageInfo(this, getBlockDamage()));
         intents.add(new Intent(this, 0) {
             @Override
             public void takeTurn() {
@@ -130,7 +135,9 @@ public class EvilGod extends AbstractMonster implements LMGameGeneralUtils {
                 if (LMSK.Player().hasPower(BarricadePower.POWER_ID)) {
                     damage.clear();
                     damage.add(new DamageInfo(source, source.getBlockDamage()));
+                    source.damage.set(intent_0, new DamageInfo(source, source.getBlockDamage()));
                     setMove((byte) 0, Intent.ATTACK, damage.get(0).base);
+                    applyPowers();
                 } else {
                     setNoMove();
                 }
@@ -156,6 +163,7 @@ public class EvilGod extends AbstractMonster implements LMGameGeneralUtils {
                     damage.clear();
                     damage.add(new DamageInfo(source, 1));
                     setMove((byte) 0, Intent.ATTACK, damage.get(0).base, atkTimes, true);
+                    applyPowers();
                 } else {
                     setNoMove();
                 }
@@ -184,8 +192,10 @@ public class EvilGod extends AbstractMonster implements LMGameGeneralUtils {
     
     @Override
     public void usePreBattleAction() {
+        DEFEATED = false;
         CardCrawlGame.music.unsilenceBGM();
         AbstractDungeon.scene.fadeOutAmbiance();
+        CardCrawlGame.music.playTempBgmInstantly("SE_EG_BGM.mp3", true);
     }
     
     public void onPowersModified() {
@@ -193,8 +203,8 @@ public class EvilGod extends AbstractMonster implements LMGameGeneralUtils {
             perpetuals.forEach(p -> {
                 AbstractPower po = getPower(p.ID);
                 if (po == null) {
-                    if (p instanceof GodVisionPower)
-                        addPower(((GodVisionPower) p).apply());
+                    if (p instanceof PowerLimitationPower)
+                        addPower(((PowerLimitationPower) p).apply());
                     else addPower(p);
                 }
             });
@@ -203,6 +213,7 @@ public class EvilGod extends AbstractMonster implements LMGameGeneralUtils {
     }
     
     public void onInstantlyKilled() {
+        if (CheatCMD.CHEATING) return;
         AbstractDungeon.getCurrRoom().cannotLose = true;
         beKilled = true;
     }
@@ -343,19 +354,15 @@ public class EvilGod extends AbstractMonster implements LMGameGeneralUtils {
                 changeStance(new SEDivinityStance(this));
                 increaseMaxHp(66666 - maxHealth, true);
                 addInitialPower(new ArtifactPower(this, 10){
-//                @Override
-//                public void onSpecificTrigger() {
-//                    super.onSpecificTrigger();
-//                    if (owner instanceof EvilGod) {
-//                        if (amount <= 0) {
-//                            ((EvilGod) owner).perpetuals.removeIf(p -> p instanceof ArtifactPower);
-//                        } else {
-//                            ((EvilGod) owner).perpetuals.stream().filter(p -> p instanceof ArtifactPower)
-//                                    .findFirst()
-//                                    .ifPresent(p -> p.amount = amount);
-//                        }
-//                    }
-//                }
+                    @Override
+                    public void onSpecificTrigger() {
+                        super.onSpecificTrigger();
+                        if (owner instanceof EvilGod) {
+                            if (amount <= 1) {
+                                ((EvilGod) owner).perpetuals.removeIf(p -> p instanceof ArtifactPower);
+                            }
+                        }
+                    }
                 });
                 addInitialPower(new GodCursePower(this));
                 AbstractPower p = getPower(InvinciblePower.POWER_ID);
@@ -382,9 +389,13 @@ public class EvilGod extends AbstractMonster implements LMGameGeneralUtils {
         if (!AbstractDungeon.getCurrRoom().cannotLose) {
             addToTop(new TalkAction(this, DIALOG[2]));
             super.die();
+            for (AbstractMonster m : LMSK.GetAllExptMonsters(m -> !m.isDeadOrEscaped())) {
+                addToTop(new EscapeAction(m));
+            }
             onBossVictoryLogic();
             onFinalBossVictoryLogic();
             CardCrawlGame.stopClock = true;
+            DEFEATED = true;
         }
     }
     
@@ -594,7 +605,7 @@ public class EvilGod extends AbstractMonster implements LMGameGeneralUtils {
     private static abstract class Intent extends AbstractMonster {
         private static final byte NONE = Byte.MIN_VALUE;
         protected EvilGod source;
-        private int index;
+        private final int index;
         
         public Intent(EvilGod source, int index) {
             super(source.name, source.id, 0, 0F, 0F, 0F, 0F, null, 0F, 0F);
@@ -604,15 +615,25 @@ public class EvilGod extends AbstractMonster implements LMGameGeneralUtils {
             drawY = source.drawY;
             updateHitbox(0, 0, 230F, 240F);
             nextMove = NONE;
+            powers = source.powers;
         }
     
         @SpireOverride
         protected void calculateDamage(int dmg) {
-            int sourceIntentDmg = SETool.getField(AbstractMonster.class, source, "intentDmg");
-            source.calculateDamage(dmg);
-            int tmp = SETool.getField(AbstractMonster.class, source, "intentDmg");
-            SETool.setField(AbstractMonster.class, source, "intentDmg", sourceIntentDmg);
-            ReflectionHacks.setPrivate(this, AbstractMonster.class, "intentDmg", tmp);
+            SpireSuper.call(dmg);
+            int intentDmg = SETool.getField(AbstractMonster.class, this, "intentDmg");
+            float tmp = intentDmg;
+            tmp = source.stance.atDamageGive(tmp, DamageInfo.DamageType.NORMAL);
+            if (LMSK.Player().hasPower(IntangiblePower.POWER_ID) || LMSK.Player().hasPower(IntangiblePlayerPower.POWER_ID))
+                tmp = Math.min(tmp, King.INTANGIBLE_FINAL_DAMAGE);
+            if (tmp < 0) tmp = 0;
+            intentDmg = MathUtils.floor(tmp);
+            ReflectionHacks.setPrivate(this, AbstractMonster.class, "intentDmg", intentDmg);
+//            int sourceIntentDmg = SETool.getField(AbstractMonster.class, source, "intentDmg");
+//            source.calculateDamage(dmg);
+//            int tmp = SETool.getField(AbstractMonster.class, source, "intentDmg");
+//            SETool.setField(AbstractMonster.class, source, "intentDmg", sourceIntentDmg);
+//            ReflectionHacks.setPrivate(this, AbstractMonster.class, "intentDmg", tmp);
         }
     
         @Override
@@ -625,6 +646,8 @@ public class EvilGod extends AbstractMonster implements LMGameGeneralUtils {
                 if (applyBackAttack)
                     dmg.output = (int)(dmg.output * 1.5F);
                 dmg.output = (int) source.stance.atDamageGive(dmg.output, DamageInfo.DamageType.NORMAL);
+                if (LMSK.Player().hasPower(IntangiblePower.POWER_ID) || LMSK.Player().hasPower(IntangiblePlayerPower.POWER_ID))
+                    dmg.output = Math.min(dmg.output, King.INTANGIBLE_FINAL_DAMAGE);
             }
             EnemyMoveInfo move = SETool.getField(AbstractMonster.class, this, "move");
             if (move.baseDamage > -1)
@@ -676,6 +699,8 @@ public class EvilGod extends AbstractMonster implements LMGameGeneralUtils {
             if (applyBackAttack)
                 dmg.output = (int)(dmg.output * 1.5F);
             dmg.output = (int) stance.atDamageGive(dmg.output, DamageInfo.DamageType.NORMAL);
+            if (LMSK.Player().hasPower(IntangiblePower.POWER_ID) || LMSK.Player().hasPower(IntangiblePlayerPower.POWER_ID))
+                dmg.output = Math.min(dmg.output, King.INTANGIBLE_FINAL_DAMAGE);
         }
         EnemyMoveInfo move = SETool.getField(AbstractMonster.class, this, "move");
         if (move.baseDamage > -1)
@@ -683,6 +708,7 @@ public class EvilGod extends AbstractMonster implements LMGameGeneralUtils {
         Texture intentImg = SETool.getMethod(AbstractMonster.class, "getIntentImg").invoke(this);
         SETool.setField(AbstractMonster.class, this, "intentImg", intentImg);
         SETool.getMethod(AbstractMonster.class, "updateIntentTip").invoke(this);
+        intents.stream().filter(i -> i.nextMove != Intent.NONE).forEach(Intent::applyPowers);
     }
     
     @SpireOverride
@@ -691,6 +717,8 @@ public class EvilGod extends AbstractMonster implements LMGameGeneralUtils {
         int intentDmg = SETool.getField(AbstractMonster.class, this, "intentDmg");
         float tmp = intentDmg;
         tmp = stance.atDamageGive(tmp, DamageInfo.DamageType.NORMAL);
+        if (LMSK.Player().hasPower(IntangiblePower.POWER_ID) || LMSK.Player().hasPower(IntangiblePlayerPower.POWER_ID))
+            tmp = Math.min(tmp, King.INTANGIBLE_FINAL_DAMAGE);
         if (tmp < 0) tmp = 0;
         intentDmg = MathUtils.floor(tmp);
         ReflectionHacks.setPrivate(this, AbstractMonster.class, "intentDmg", intentDmg);
@@ -746,13 +774,14 @@ public class EvilGod extends AbstractMonster implements LMGameGeneralUtils {
         }
         public static boolean DoubleBoss() {
             boolean db = AbstractDungeon.ascensionLevel >= 20 && LMSK.Player().hasRelic(CultistMask.ID);
-            if (db) {
+            if (db && !AbstractDungeon.bossList.isEmpty()) {
                 AbstractDungeon.bossList.clear();
                 AbstractDungeon.bossList.add(ID);
                 if (CardCrawlGame.stopClock)
                     CardCrawlGame.stopClock = false;
+                return true;
             }
-            return db;
+            return false;
         }
     }
 }

@@ -23,7 +23,11 @@ public class GodCursePower extends AbstractSEPower {
     }
     
     @Override
-    public void onAttack(DamageInfo info, int damageAmount, AbstractCreature target) {
+    public void atEndOfTurn(boolean isPlayer) {
+        trigger();
+    }
+    
+    private void trigger() {
         addToBot(new MakeTempCardInDrawPileAction(new Necronomicurse(), 1, true, true));
         addToBot(new MakeTempCardInDrawPileAction(new CurseOfTheBell(), 1, true, true));
         addToBot(new MakeTempCardInDrawPileAction(new CurseOfGod(), 1, true, true));

@@ -124,7 +124,7 @@ public class SEVCardEditorManaged {
             CardEditor e = GetModifierEditor(_inst);
             e.initFunc = c -> {
                 updateCardDesc(c, strings.DESCRIPTION);
-                c.baseMagicNumber = c.magicNumber = 1;
+                c.baseMagicNumber = c.magicNumber = 3;
             };
             e.use = (c,p,m) -> {
                 addToBot(new LoseHPAction(p, p, 3));

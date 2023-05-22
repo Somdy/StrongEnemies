@@ -48,7 +48,7 @@ public class IntangiblePowerPatch {
         public static void Raw(CtBehavior ctBehavior) throws Exception {
             CtClass ctClass = ctBehavior.getDeclaringClass();
             CtMethod stackPower = CtNewMethod.make(CtClass.voidType, "stackPower", new CtClass[]{CtClass.intType}, null, 
-                    "{if($0.amount>=3)return;else{super.stackPower($1);}}", ctClass);
+                    "{if($0.amount+$1>=3)return;else{super.stackPower($$);}}", ctClass);
             ctClass.addMethod(stackPower);
         }
     }

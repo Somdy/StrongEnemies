@@ -2,18 +2,21 @@ package rs.winds.patches;
 
 import com.evacipated.cardcrawl.modthespire.lib.*;
 import com.megacrit.cardcrawl.core.CardCrawlGame;
+import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.screens.GameOverScreen;
 import com.megacrit.cardcrawl.screens.GameOverStat;
 import com.megacrit.cardcrawl.screens.VictoryScreen;
 import javassist.CtBehavior;
 import rs.winds.dungeons.CityDepths;
 import rs.winds.dungeons.RootDepths;
+import rs.winds.monsters.ending.EvilGod;
 
 import java.util.ArrayList;
 
 public class VictoryScreenStatsPatch {
     private static final int KING_SCORE = 250;
     private static final int TREE_SCORE = 300;
+    private static final int EGOD_SCORE = 500;
     @SpirePatch(clz = VictoryScreen.class, method = "createGameOverStats")
     public static class AddBossKingStats {
         @SpireInsertPatch(locator = Locator.class)
@@ -22,6 +25,8 @@ public class VictoryScreenStatsPatch {
                 ___stats.add(new GameOverStat("击败国王", "击败国王", Integer.toString(KING_SCORE)));
             if (CardCrawlGame.dungeon instanceof RootDepths)
                 ___stats.add(new GameOverStat("风暴击倒大树", "风暴击倒大树", Integer.toString(TREE_SCORE)));
+            if (EvilGod.DEFEATED && AbstractDungeon.actNum >= 4)
+                ___stats.add(new GameOverStat("弑神", "弑神", Integer.toString(EGOD_SCORE)));
         }
         private static class Locator extends SpireInsertLocator {
             @Override
@@ -41,6 +46,8 @@ public class VictoryScreenStatsPatch {
                     p += KING_SCORE;
                 if (CardCrawlGame.dungeon instanceof RootDepths)
                     p += TREE_SCORE;
+                if (EvilGod.DEFEATED && AbstractDungeon.actNum >= 4)
+                    p += EGOD_SCORE;
             }
             return p;
         }

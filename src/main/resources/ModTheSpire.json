@@ -3,7 +3,7 @@
     "name": "[强化敌人] Strong Enemies",
     "author_list": ["Somdy", "The World"],
     "description": "强化敌人",
-    "version": "1.4.1",
+    "version": "1.4.6",
     "sts_version": "12-22-2020",
     "mts_version": "3.30.0",
     "dependencies": ["basemod", "LazyManKits", "actlikeit"]
