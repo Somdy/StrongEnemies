@@ -11,6 +11,7 @@ import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.cards.DamageInfo;
 import com.megacrit.cardcrawl.cards.green.Acrobatics;
 import com.megacrit.cardcrawl.cards.green.Bane;
+import com.megacrit.cardcrawl.cards.green.BladeDance;
 import com.megacrit.cardcrawl.cards.green.Eviscerate;
 import com.megacrit.cardcrawl.cards.tempCards.Shiv;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
@@ -29,7 +30,7 @@ import static rs.winds.monsters.SETool.*;
 import static rs.winds.cards.SECardEditor.*;
 import static com.megacrit.cardcrawl.actions.AbstractGameAction.AttackEffect.*;
 
-public class SEVCardEditorManaged {
+public class SEVGreenCardEditorManaged {
     private static void addToBot(AbstractGameAction action) {
         AbstractDungeon.actionManager.addToBottom(action);
     }
@@ -45,7 +46,7 @@ public class SEVCardEditorManaged {
             e.initFunc = c -> updateCardDesc(c, strings.DESCRIPTION);
             e.use = (c,p,m) -> {
                 addToBot(new DrawCardAction(p, c.magicNumber));
-                addToBot(new DamageAction(p, new DamageInfo(p, 4, c.damageTypeForTurn)));
+                addToBot(new DamageAction(p, new DamageInfo(p, 4, DamageInfo.DamageType.THORNS)));
                 addToBot(new SimpleHandCardSelectBuilder(ca -> true)
                         .setCanPickZero(false).setAnyNumber(false)
                         .setAmount(1).setMsg(DiscardAction.TEXT[0]).setManipulator(new HandCardManipulator() {
@@ -124,7 +125,7 @@ public class SEVCardEditorManaged {
             CardEditor e = GetModifierEditor(_inst);
             e.initFunc = c -> {
                 updateCardDesc(c, strings.DESCRIPTION);
-                c.baseMagicNumber = c.magicNumber = 3;
+                c.baseMagicNumber = c.magicNumber = 2;
             };
             e.use = (c,p,m) -> {
                 addToBot(new LoseHPAction(p, p, 3));
@@ -185,6 +186,17 @@ public class SEVCardEditorManaged {
                     return true;
                 }
                 return false;
+            };
+        }
+    }
+    
+    @SECardEditor(card = BladeDance.class)
+    public static class BladeDanceSE {
+        private static final CardStrings strings = King.CardStrings(King.MakeID("Bane"));
+        public static void Edit(AbstractCard _inst) {
+            CardEditor e = GetModifierEditor(_inst);
+            e.initFunc = c -> {
+                c.rarity = AbstractCard.CardRarity.UNCOMMON;
             };
         }
     }

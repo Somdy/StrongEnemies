@@ -15,6 +15,7 @@
         <SlayTheSpire.version>03-05-2020</SlayTheSpire.version>
         <ModTheSpire.version>3.22.0</ModTheSpire.version>
         <basemod.version>5.22.0</basemod.version>
+        <stslib.version>2.10.0</stslib.version>
         <LMK.version>1.0.19</LMK.version>
         <actlikeit.version>1.2.7</actlikeit.version>
         <Steam.path>D:\oData\Programme Files\Steam\steamapps</Steam.path>
@@ -42,6 +43,13 @@
             <version>${basemod.version}</version>
             <scope>system</scope>
             <systemPath>${Steam.path}/workshop/content/646570/1605833019/BaseMod.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>stslib</groupId>
+            <artifactId>stslib</artifactId>
+            <version>${stslib.version}</version>
+            <scope>system</scope>
+            <systemPath>${Steam.path}/workshop/content/646570/1609158507/StSLib.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>rs.lazymankits</groupId>

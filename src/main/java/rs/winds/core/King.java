@@ -12,6 +12,7 @@ import basemod.interfaces.*;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.MathUtils;
 import com.evacipated.cardcrawl.modthespire.lib.SpireInitializer;
+import com.google.gson.Gson;
 import com.megacrit.cardcrawl.actions.common.ApplyPowerAction;
 import com.megacrit.cardcrawl.actions.common.GainBlockAction;
 import com.megacrit.cardcrawl.actions.common.RollMoveAction;
@@ -39,12 +40,12 @@ import rs.lazymankits.LMDebug;
 import rs.lazymankits.abstracts.DamageInfoTag;
 import rs.lazymankits.utils.LMSK;
 import rs.winds.abstracts.AbstractSEPower;
+import rs.winds.cards.blue.Allocation;
+import rs.winds.cards.blue.BodySlamPowerCard;
 import rs.winds.cards.curse.CurseOfGod;
 import rs.winds.cards.silent.AlwaysPrepared;
 import rs.winds.cards.watcher.WatcherFour;
-import rs.winds.cards.watcher.WatcherOne;
 import rs.winds.cards.watcher.WatcherThree;
-import rs.winds.cards.watcher.WatcherTwo;
 import rs.winds.core.commands.CheatCMD;
 import rs.winds.dungeons.CityDepths;
 import rs.winds.dungeons.RootDepths;
@@ -68,13 +69,13 @@ import rs.winds.relics.SERInvitation;
 import rs.winds.rewards.ApoReward;
 import rs.winds.rewards.NightmareReward;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 @SpireInitializer
 public class King implements EditStringsSubscriber, PostInitializeSubscriber, StartGameSubscriber, CustomSavable<Map<String, String>>, 
         EditRelicsSubscriber, AddAudioSubscriber, PostExhaustSubscriber, EditCardsSubscriber, PostDungeonUpdateSubscriber, 
-        OnPowersModifiedSubscriber, OnPlayerTurnStartPostDrawSubscriber {
+        OnPowersModifiedSubscriber, OnPlayerTurnStartPostDrawSubscriber, EditKeywordsSubscriber, StartActSubscriber {
     public static final String MOD_ID = "StrongEnemies";
     public static final String MOD_NAME = "Strong Enemies";
     public static final String[] AUTHORS = {"Somdy", "The World"};
@@ -191,38 +192,55 @@ public class King implements EditStringsSubscriber, PostInitializeSubscriber, St
     @Override
     public void receivePostInitialize() {
         ConsoleCommand.addCommand("sernitya", CheatCMD.class);
+        
         BaseMod.registerCustomReward(SEEnums.ApoRewardType, load -> new ApoReward(), 
                 save -> new RewardSave(save.type.toString(), "SE_ApoReward"));
         BaseMod.registerCustomReward(SEEnums.NightmareRewardType, load -> new NightmareReward(), 
                 save -> new RewardSave(save.type.toString(), "SE_NightmareReward"));
         
-        BaseMod.addEvent(new AddEventParams.Builder(ColosseumSE.ID, ColosseumSE.class)
+        BaseMod.addEvent(new AddEventParams.Builder(ColosseumSE.GetID(TheCity.ID), ColosseumSE.class)
                 .eventType(EventUtils.EventType.OVERRIDE).overrideEvent(Colosseum.ID)
                 .bonusCondition(() -> AbstractDungeon.ascensionLevel >= 20).dungeonID(TheCity.ID).endsWithRewardsUI(true).create());
-        BaseMod.addEvent(new AddEventParams.Builder(ColosseumSE.ID, ColosseumSE.class)
+        
+        BaseMod.addEvent(new AddEventParams.Builder(ColosseumSE.GetID(Exordium.ID), ColosseumSE.class)
                 .eventType(EventUtils.EventType.NORMAL).spawnCondition(() -> AbstractDungeon.ascensionLevel >= 20)
                 .bonusCondition(() -> AbstractDungeon.currMapNode != null && AbstractDungeon.currMapNode.y > AbstractDungeon.map.size() / 2)
                 .dungeonID(Exordium.ID).endsWithRewardsUI(true).create());
-        BaseMod.addEvent(new AddEventParams.Builder(ColosseumSE.ID, ColosseumSE.class)
+        BaseMod.addEvent(new AddEventParams.Builder(ColosseumSE.GetID(TheBeyond.ID), ColosseumSE.class)
                 .eventType(EventUtils.EventType.NORMAL).spawnCondition(() -> AbstractDungeon.ascensionLevel >= 20)
                 .bonusCondition(() -> AbstractDungeon.currMapNode != null && AbstractDungeon.currMapNode.y > AbstractDungeon.map.size() / 2)
                 .dungeonID(TheBeyond.ID).endsWithRewardsUI(true).create());
-        BaseMod.addEvent(new AddEventParams.Builder(ColosseumSE.ID, ColosseumSE.class)
+        BaseMod.addEvent(new AddEventParams.Builder(ColosseumSE.GetID(TheEnding.ID), ColosseumSE.class)
                 .eventType(EventUtils.EventType.NORMAL).spawnCondition(() -> AbstractDungeon.ascensionLevel >= 20)
                 .bonusCondition(() -> AbstractDungeon.currMapNode != null && AbstractDungeon.currMapNode.y > AbstractDungeon.map.size() / 2)
                 .dungeonID(TheEnding.ID).endsWithRewardsUI(true).create());
-        BaseMod.addEvent(new AddEventParams.Builder(ColosseumSE.ID, ColosseumSE.class)
+        
+        // to custom dungeons
+        BaseMod.addEvent(new AddEventParams.Builder(ColosseumSE.GetID(CityDepths.ID), ColosseumSE.class)
                 .eventType(EventUtils.EventType.NORMAL).spawnCondition(() -> AbstractDungeon.ascensionLevel >= 20)
                 .bonusCondition(() -> AbstractDungeon.currMapNode != null && AbstractDungeon.currMapNode.y > AbstractDungeon.map.size() / 2)
-                .dungeonID(CityDepths.ID).endsWithRewardsUI(true).create());
-        BaseMod.addEvent(new AddEventParams.Builder(ColosseumSE.ID, ColosseumSE.class)
-                .eventType(EventUtils.EventType.NORMAL).spawnCondition(() -> AbstractDungeon.ascensionLevel >= 20)
-                .bonusCondition(() -> AbstractDungeon.currMapNode != null && AbstractDungeon.currMapNode.y > AbstractDungeon.map.size() / 2)
-                .dungeonID(RootDepths.ID).endsWithRewardsUI(true).create());
-        addMonsters();
+                .dungeonIDs(CityDepths.ID, RootDepths.ID).endsWithRewardsUI(true).create());
+        
+        List<String> oCDs = new ArrayList<>();
+        CustomDungeon.dungeons.forEach((id, cd) -> {
+            if (!oCDs.contains(id)) {
+                Log("Adding colosseum to custom dungeon [" + id + "] from other mods");
+                oCDs.add(id);
+            }
+        });
+        if (!oCDs.isEmpty()) {
+            for (String id : oCDs) {
+                BaseMod.addEvent(new AddEventParams.Builder(ColosseumSE.GetID(id), ColosseumSE.class)
+                        .eventType(EventUtils.EventType.NORMAL).spawnCondition(() -> AbstractDungeon.ascensionLevel >= 20)
+                        .bonusCondition(() -> AbstractDungeon.currMapNode != null && AbstractDungeon.currMapNode.y > AbstractDungeon.map.size() / 2)
+                        .dungeonID(id).endsWithRewardsUI(true).create());
+            }
+        }
     
         CustomDungeon.addAct(TheEnding.ID, new CityDepths());
         CustomDungeon.addAct(TheEnding.ID, new RootDepths());
+        
+        addMonsters();
     }
     
     @Override
@@ -242,13 +260,38 @@ public class King implements EditStringsSubscriber, PostInitializeSubscriber, St
     
     @Override
     public void receiveEditCards() {
-        BaseMod.addCard(new WatcherOne());
-        BaseMod.addCard(new WatcherTwo());
+//        BaseMod.addCard(new WatcherOne());
+//        BaseMod.addCard(new WatcherTwo());
         BaseMod.addCard(new WatcherThree());
         BaseMod.addCard(new WatcherFour());
         BaseMod.addCard(new AlwaysPrepared());
         
+        BaseMod.addCard(new BodySlamPowerCard());
+        BaseMod.addCard(new Allocation());
+        
         BaseMod.addCard(new CurseOfGod());
+    }
+    
+    @Override
+    public void receiveEditKeywords() {
+        String lang = getSupLang();
+        Gson gson = new Gson();
+        String keywordJson = Gdx.files.internal("SEAssets/locals/" + lang + "/keywords.json")
+                .readString(String.valueOf(StandardCharsets.UTF_8));
+        Keyword[] keywords = gson.fromJson(keywordJson, Keyword[].class);
+        assert keywords != null;
+        for (Keyword k : keywords) {
+            addKeyword(k);
+        }
+    }
+    
+    private void addKeyword(@NotNull Keyword k) {
+        String keyName = k.NAMES[0];
+        if (Settings.language == Settings.GameLanguage.ENG)
+            for (int i = 0; i < k.NAMES.length; i++) {
+                k.NAMES[i] = k.NAMES[i].toLowerCase();
+            }
+        BaseMod.addKeyword(GetPrefix(), keyName, k.NAMES, k.DESCRIPTION);
     }
     
     @Override
@@ -293,6 +336,16 @@ public class King implements EditStringsSubscriber, PostInitializeSubscriber, St
                     }
                 }
             }
+        }
+    }
+    
+    @Override
+    public void receiveStartAct() {
+        if (AbstractDungeon.getCurrMapNode() != null) {
+            LMSK.Player().relics.stream().filter(r -> r instanceof SERInvitation)
+                    .findFirst()
+                    .map(r -> (SERInvitation) r)
+                    .ifPresent(SERInvitation::recharge);
         }
     }
     

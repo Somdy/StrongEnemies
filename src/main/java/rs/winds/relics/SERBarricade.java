@@ -3,6 +3,7 @@ package rs.winds.relics;
 import basemod.abstracts.CustomRelic;
 import com.megacrit.cardcrawl.actions.common.ApplyPowerAction;
 import com.megacrit.cardcrawl.actions.common.RelicAboveCreatureAction;
+import com.megacrit.cardcrawl.characters.AbstractPlayer;
 import com.megacrit.cardcrawl.helpers.ImageMaster;
 import com.megacrit.cardcrawl.powers.BarricadePower;
 import rs.lazymankits.utils.LMSK;

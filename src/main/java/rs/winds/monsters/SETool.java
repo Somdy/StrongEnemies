@@ -59,6 +59,22 @@ public interface SETool {
         getMethod(AbstractCard.class, "upgradeName").invoke(card);
     }
     
+    static void upgradeCardMagic(AbstractCard card, int amount) {
+        SETool.getMethod(AbstractCard.class, "upgradeMagicNumber", int.class).invoke(card, amount);
+    }
+    
+    static void upgradeCardDamage(AbstractCard card, int amount) {
+        SETool.getMethod(AbstractCard.class, "upgradeDamage", int.class).invoke(card, amount);
+    }
+    
+    static void upgradeCardBlock(AbstractCard card, int amount) {
+        SETool.getMethod(AbstractCard.class, "upgradeBlock", int.class).invoke(card, amount);
+    }
+    
+    static void upgradeCardBaseCost(AbstractCard card, int cost) {
+        SETool.getMethod(AbstractCard.class, "upgradeBaseCost", int.class).invoke(card, cost);
+    }
+    
     static MonsterEditor GetEditor(AbstractMonster m) {
         return AbstractMonsterPatch.TrackerField.mTracker.get(m);
     }
@@ -123,5 +139,9 @@ public interface SETool {
         } else {
             return m.moveHistory.get(m.moveHistory.size() - 1) == move && m.moveHistory.get(m.moveHistory.size() - 2) == move;
         }
+    }
+    
+    static void getMove(AbstractMonster m, int roll) {
+        getMethod(AbstractMonster.class, "getMove", int.class).invoke(m, roll);
     }
 }

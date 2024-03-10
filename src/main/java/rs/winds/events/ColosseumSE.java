@@ -9,6 +9,7 @@ import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.dungeons.TheBeyond;
 import com.megacrit.cardcrawl.dungeons.TheCity;
 import com.megacrit.cardcrawl.dungeons.TheEnding;
+import com.megacrit.cardcrawl.events.AbstractEvent;
 import com.megacrit.cardcrawl.events.AbstractImageEvent;
 import com.megacrit.cardcrawl.events.city.Colosseum;
 import com.megacrit.cardcrawl.helpers.MonsterHelper;
@@ -19,9 +20,13 @@ import rs.lazymankits.utils.LMSK;
 import rs.winds.core.King;
 import rs.winds.dungeons.CityDepths;
 import rs.winds.dungeons.RootDepths;
+import rs.winds.ui.campfire.InvitationOption;
 
 public class ColosseumSE extends AbstractImageEvent {
-    public static final String ID = King.MakeID(Colosseum.ID);
+    
+    public static boolean SecondCombat = false;
+    
+    private static final String ID = King.MakeID(Colosseum.ID);
     private static final EventStrings strings = CardCrawlGame.languagePack.getEventString(Colosseum.ID);
     public static final String[] DESCRIPTIONS = strings.DESCRIPTIONS;
     public static final String[] OPTIONS = strings.OPTIONS;
@@ -30,6 +35,12 @@ public class ColosseumSE extends AbstractImageEvent {
     public static final byte leave = 2;
     public static final byte postcombat = 3;
     private byte phase;
+    
+    public static String GetID(String dungeonID) {
+        if (RootDepths.ID.equals(dungeonID))
+            dungeonID = CityDepths.ID;
+        return ID.concat("." + dungeonID);
+    }
     
     public ColosseumSE() {
         super(strings.NAME, DESCRIPTIONS[0], "images/events/colosseum.jpg");
@@ -40,11 +51,14 @@ public class ColosseumSE extends AbstractImageEvent {
     protected void buttonEffect(int button) {
         switch (phase) {
             case intro:
+                SecondCombat = false;
+                King.Log("Initializing boolean value");
                 imageEventText.updateBodyText(DESCRIPTIONS[1] + DESCRIPTIONS[2] + 4200 + DESCRIPTIONS[3]);
                 imageEventText.updateDialogOption(0, OPTIONS[1]);
                 phase = fight;
                 return;
             case fight:
+                logMetric("fight");
                 AbstractDungeon.getCurrRoom().monsters = MonsterHelper.getEncounter(getMonsters(0));
                 AbstractDungeon.getCurrRoom().rewards.clear();
                 AbstractDungeon.getCurrRoom().rewardAllowed = false;
@@ -56,6 +70,7 @@ public class ColosseumSE extends AbstractImageEvent {
             case postcombat:
                 AbstractDungeon.getCurrRoom().rewardAllowed = true;
                 if (button == 1) {
+                    logMetric("continue fight");
                     phase = leave;
                     AbstractDungeon.getCurrRoom().monsters = MonsterHelper.getEncounter(getMonsters(1));
                     AbstractDungeon.getCurrRoom().rewards.clear();
@@ -67,9 +82,11 @@ public class ColosseumSE extends AbstractImageEvent {
                     }
                     AbstractDungeon.getCurrRoom().addGoldToRewards(100);
                     AbstractDungeon.getCurrRoom().eliteTrigger = true;
+                    SecondCombat = true;
                     enterCombatFromImage();
                     AbstractDungeon.lastCombatMetricKey = getMonsters(1);
                 } else {
+                    logMetric("fled");
                     openMap();
                 }
                 return;
@@ -91,6 +108,10 @@ public class ColosseumSE extends AbstractImageEvent {
             default:
                 return combat == 0 ? MonsterHelper.THREE_LOUSE_ENC : King.Encounter.THREE_LOUSE_ENC;
         }
+    }
+    
+    public void logMetric(String actionTaken) {
+        AbstractEvent.logMetric(InvitationOption.eventName, actionTaken);
     }
     
     @Override

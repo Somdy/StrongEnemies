@@ -103,6 +103,12 @@ public class MonsterEditor {
         intMap.put(key, value);
     }
     
+    public void modifyInt(String key, int i) {
+        int value = getInt(key);
+        value += i;
+        setInt(key, value);
+    }
+    
     public void setInt(String key, int value) {
         if (intMap.containsKey(key))
             intMap.put(key, value);

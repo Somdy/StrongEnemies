@@ -20,16 +20,13 @@ public class WatcherFour extends AbstractSECard {
     public static final String ID = King.MakeID("WatcherFour");
     
     public WatcherFour() {
-        super(ID, "watcher_four", 3, CardType.SKILL, CardColor.PURPLE, CardRarity.RARE, CardTarget.SELF);
-        setDamageValue(3, true);
+        super(ID, "watcher_four", 2, CardType.SKILL, CardColor.PURPLE, CardRarity.RARE, CardTarget.SELF);
+        setDamageValue(10, true);
     }
     
     @Override
     protected void play(AbstractCreature s, AbstractCreature t) {
-        int times = upgraded ? 5 : 10;
-        for (int i = 0; i < times; i++) {
-            addToBot(new DamageAction(s, new DamageInfo(s, damage, damageTypeForTurn)));
-        }
+        addToBot(new DamageAction(s, new DamageInfo(s, 10, DamageInfo.DamageType.THORNS)));
         addToBot(new QuickAction(() -> {
             Optional<AbstractPower> opt = getExptPower(s.powers, p -> StrengthPower.POWER_ID.equals(p.ID));
             opt.ifPresent(p -> addToTop(new ApplyPowerAction(s, s, new StrengthPower(s, p.amount))));
@@ -41,7 +38,7 @@ public class WatcherFour extends AbstractSECard {
     @Override
     public void upgrade() {
         if (!upgraded) {
-            upgradeBaseCost(2);
+            upgradeBaseCost(1);
             upgradeTexts();
         }
     }

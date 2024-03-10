@@ -75,7 +75,8 @@ public class TheHolyTree extends AbstractMonster {
                 if (secondStage) {
                     Growth growth = new Growth();
                     growth.upgrade();
-                    addToBot(new MakeTempCardInDiscardAction(growth, 5));
+//                    addToBot(new MakeTempCardInDiscardAction(growth, 5));
+                    addToBot(new MakeTempCardInDrawPileAction(growth, 5, true, true));
                     addToBot(new ApplyPowerAction(LMSK.Player(), this, new TreePoisonPower(LMSK.Player(), this, 10)));
                     addToBot(new RemoveAllBlockAction(LMSK.Player(), this));
                 } else {

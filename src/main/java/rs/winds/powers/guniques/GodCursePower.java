@@ -32,7 +32,7 @@ public class GodCursePower extends AbstractSEPower {
         addToBot(new MakeTempCardInDrawPileAction(new CurseOfTheBell(), 1, true, true));
         addToBot(new MakeTempCardInDrawPileAction(new CurseOfGod(), 1, true, true));
         addToBot(new QuickAction(() -> {
-            for (int i = 0; i < 3; i++) {
+            for (int i = 0; i < 5; i++) {
                 int size = LMSK.Player().relics.size();
                 if (size == 0) break;
                 AbstractRelic r = LMSK.Player().relics.get(size - 1);

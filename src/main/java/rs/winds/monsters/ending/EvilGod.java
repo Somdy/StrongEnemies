@@ -49,6 +49,7 @@ import org.jetbrains.annotations.NotNull;
 import rs.lazymankits.actions.utility.QuickAction;
 import rs.lazymankits.utils.LMGameGeneralUtils;
 import rs.lazymankits.utils.LMSK;
+import rs.winds.cards.colorless.Voidness;
 import rs.winds.core.King;
 import rs.winds.core.commands.CheatCMD;
 import rs.winds.dungeons.CityDepths;
@@ -65,6 +66,8 @@ public class EvilGod extends AbstractMonster implements LMGameGeneralUtils {
     private static final MonsterStrings strings = King.MonsterStrings(ID);
     public static final String NAME = strings.NAME;
     public static final String[] DIALOG = strings.DIALOG;
+    private static final String ATLAS = "SEAssets/images/monsters/WingCultist/WingCultist.atlas";
+    private static final String JSON = "SEAssets/images/monsters/WingCultist/WingCultist.json";
     public static final float MAIN_OFFSET_X = -150F;
     public static final float LEFT_OFFSET_X = MAIN_OFFSET_X + 280F;
     public static final float RIGHT_OFFSET_X = MAIN_OFFSET_X - 280F;
@@ -88,9 +91,9 @@ public class EvilGod extends AbstractMonster implements LMGameGeneralUtils {
     private final Map<Vector2, AbstractMonster> minions = new HashMap<>();
     
     public EvilGod(float x, float y) {
-        super(NAME, ID, 666, 0, 0, 230F, 240F, null, x, y);
-        loadAnimation("images/monsters/theBottom/cultist/skeleton.atlas", "images/monsters/theBottom/cultist/skeleton.json", 1.0F);
-        AnimationState.TrackEntry e = state.setAnimation(0, "waving", true);
+        super(NAME, ID, 666, 0, 0, 230F, 320F, null, x, y);
+        loadAnimation(ATLAS, JSON, 1.0F);
+        AnimationState.TrackEntry e = state.setAnimation(0, "Idle", true);
         e.setTime(e.getEndTime() * MathUtils.random());
         eye = skeleton.findBone("head");
         type = EnemyType.BOSS;
@@ -196,6 +199,7 @@ public class EvilGod extends AbstractMonster implements LMGameGeneralUtils {
         CardCrawlGame.music.unsilenceBGM();
         AbstractDungeon.scene.fadeOutAmbiance();
         CardCrawlGame.music.playTempBgmInstantly("SE_EG_BGM.mp3", true);
+        addToBot(new MakeTempCardInHandAction(new Voidness(), 1));
     }
     
     public void onPowersModified() {

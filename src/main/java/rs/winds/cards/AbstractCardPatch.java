@@ -7,16 +7,12 @@ import com.evacipated.cardcrawl.modthespire.lib.*;
 import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.cards.DamageInfo;
 import com.megacrit.cardcrawl.core.CardCrawlGame;
-import com.megacrit.cardcrawl.monsters.AbstractMonster;
 import javassist.ClassPool;
 import javassist.CtBehavior;
 import javassist.CtClass;
 import org.clapper.util.classutil.*;
 import rs.winds.core.King;
 import rs.winds.monsters.AbstractMonsterPatch;
-import rs.winds.monsters.MonsterEditor;
-import rs.winds.monsters.SEMonsterEditor;
-import rs.winds.monsters.SEVMonsterEditorManaged;
 
 import java.io.File;
 import java.net.URL;
@@ -40,7 +36,7 @@ public class AbstractCardPatch {
             ClassFinder finder = new ClassFinder();
             finder.add(new File(myJarUrl.toURI()));
             List<ClassInfo> classesFound = new ArrayList<>();
-            ClassFilter alterFilter = new OrClassFilter(new AutoAdd.PackageFilter(SEVCardEditorManaged.class));
+            ClassFilter alterFilter = new OrClassFilter(new AutoAdd.PackageFilter(SEVGreenCardEditorManaged.class));
             ClassFilter classFilter = new AndClassFilter(alterFilter, new AbstractMonsterPatch.AnnotatedClassFilter(SECardEditor.class, pool));
             int classesToEdit = finder.findClasses(classesFound, classFilter);
             King.PatchLog("Found [" + classesToEdit + "] card editor classes");

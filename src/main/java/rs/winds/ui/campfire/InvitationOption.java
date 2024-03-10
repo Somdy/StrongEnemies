@@ -5,6 +5,7 @@ import basemod.CustomEventRoom;
 import basemod.eventUtil.EventUtils;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.events.AbstractEvent;
 import com.megacrit.cardcrawl.events.AbstractImageEvent;
@@ -17,16 +18,22 @@ import com.megacrit.cardcrawl.ui.campfire.AbstractCampfireOption;
 import com.megacrit.cardcrawl.vfx.AbstractGameEffect;
 import rs.winds.core.King;
 import rs.winds.events.ColosseumSE;
+import rs.winds.relics.SERInvitation;
+import rs.winds.rooms.SEColosseumEventRoom;
+
+import java.util.ArrayList;
 
 public class InvitationOption extends AbstractCampfireOption {
     private static final Texture IMAGE = ImageMaster.loadImage("SEAssets/images/ui/campfire/invitation_btn.png");
-    private static String eventName = null;
+    public static String eventName = null;
+    private SERInvitation invitation;
     
-    public InvitationOption(boolean active) {
+    public InvitationOption(boolean active, SERInvitation invitation) {
         label = "进入竞技场";
         description = "进入竞技场";
         usable = active;
         img = IMAGE;
+        this.invitation = invitation;
     }
     
     @Override
@@ -37,15 +44,22 @@ public class InvitationOption extends AbstractCampfireOption {
                 @Override
                 public void update() {
                     isDone = true;
+                    invitation.colosseum = true;
+                    invitation.usedUp();
                     if (eventName == null) {
-                        for (String s : EventUtils.getDungeonEvents(AbstractDungeon.id).keySet()) {
-                            if (s.contains(ColosseumSE.ID)) {
-                                eventName = s;
-                                King.Log("Find event [" + eventName + "]");
-                                break;
-                            }
-                        }
-                        if (eventName == null) eventName = ColosseumSE.ID;
+                        String dungeonID = AbstractDungeon.id;
+                        eventName = ColosseumSE.GetID(dungeonID);
+//                        for (String s : EventUtils.getDungeonEvents(AbstractDungeon.id).keySet()) {
+//                            if (s.contains(ColosseumSE.ID)) {
+//                                eventName = s;
+//                                King.Log("Find event [" + eventName + "]");
+//                                break;
+//                            }
+//                        }
+//                        if (eventName == null) {
+//                            King.Log("Dungeon [" + AbstractDungeon.id + "] not containing Colosseum event");
+//                            eventName = ColosseumSE.ID;
+//                        }
                     }
                     boolean keyNotExisted;
                     try {
@@ -62,11 +76,12 @@ public class InvitationOption extends AbstractCampfireOption {
                     King.Log("Adding event key to event list: " + AbstractDungeon.eventList.get(0));
                     MapRoomNode currNode = AbstractDungeon.getCurrMapNode();
                     MapRoomNode node = new MapRoomNode(currNode.x, currNode.y);
-                    node.setRoom(!keyNotExisted ? new CustomEventRoom() : new CustomEventRoom(){
+                    node.setRoom(!keyNotExisted ? new SEColosseumEventRoom() : new SEColosseumEventRoom(){
                         @Override
                         public void onPlayerEntry() {
                             AbstractDungeon.overlayMenu.proceedButton.hide();
                             event = EventUtils.getEvent(eventName);
+                            if (event == null) event = new ColosseumSE();
                             event.onEnterRoom();
                         }
                     });

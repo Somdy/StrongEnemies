@@ -10,10 +10,7 @@ import com.megacrit.cardcrawl.actions.GameActionManager;
 import com.megacrit.cardcrawl.actions.animations.*;
 import com.megacrit.cardcrawl.actions.common.*;
 import com.megacrit.cardcrawl.actions.unique.*;
-import com.megacrit.cardcrawl.actions.utility.SFXAction;
-import com.megacrit.cardcrawl.actions.utility.TextAboveCreatureAction;
-import com.megacrit.cardcrawl.actions.utility.UseCardAction;
-import com.megacrit.cardcrawl.actions.utility.WaitAction;
+import com.megacrit.cardcrawl.actions.utility.*;
 import com.megacrit.cardcrawl.blights.Shield;
 import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.cards.DamageInfo;
@@ -24,6 +21,8 @@ import com.megacrit.cardcrawl.core.CardCrawlGame;
 import com.megacrit.cardcrawl.core.Settings;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.helpers.ModHelper;
+import com.megacrit.cardcrawl.helpers.ScreenShake;
+import com.megacrit.cardcrawl.localization.MonsterStrings;
 import com.megacrit.cardcrawl.monsters.AbstractMonster;
 import com.megacrit.cardcrawl.monsters.EnemyMoveInfo;
 import com.megacrit.cardcrawl.monsters.beyond.*;
@@ -49,9 +48,13 @@ import rs.lazymankits.utils.LMSK;
 import rs.winds.cards.status.HeartOfSpire;
 import rs.winds.core.King;
 import rs.winds.powers.*;
+import rs.winds.powers.dups.BronzeLifeCounterPower;
+import rs.winds.powers.dups.DecaCardCounterPower;
+import rs.winds.powers.dups.DonuCardCounterPower;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 import static com.megacrit.cardcrawl.actions.AbstractGameAction.AttackEffect.*;
@@ -921,14 +924,107 @@ public class SEVMonsterEditorManaged {
     }
     @SEMonsterEditor(m = SlimeBoss.class)
     public static class SlimeBossSE {
+        private static final MonsterStrings monsterStrings = CardCrawlGame.languagePack.getMonsterStrings(SlimeBoss.ID);
+        public static final String[] MOVES = monsterStrings.MOVES;
+        private static final String SLAM_NAME = MOVES[0], PREP_NAME = MOVES[1], SPLIT_NAME = MOVES[2];
+        private static final String STICKY_NAME = MOVES[3];
+        
+        private static final byte atk_defend = -99;
+        
+        private static final int atk_dmg = 20;
+        private static final int block = 10;
+        
         public static void Edit(AbstractMonster _inst) {
             MonsterEditor e = GetModifierEditor(_inst);
+            e.putInt("tc1", 0);
             e.initFunc = m -> {
                 setMonsterHp(m, 160);
+                m.powers.clear();
+                m.addPower(new SplitPower(m){
+                    @Override
+                    public void updateDescription() {
+                        description = "血量为60时，锁血分裂";
+                    }
+                });
                 m.addPower(new RegenerateMonsterPower(m, 3));
+                m.damage.add(new DamageInfo(m, atk_dmg));
+            };
+            e.takeTurn = m -> {
+                e.modifyInt("tc1", 1);
+                if (m.nextMove != 3) {
+                    switch (m.nextMove) {
+                        case 4:
+                            m.addToBot(new AnimateSlowAttackAction(m));
+                            m.addToBot(new SFXAction("MONSTER_SLIME_ATTACK"));
+                            int tc1 = e.getInt("tc1");
+                            Slimed s = new Slimed();
+                            s.upgrade();
+                            m.addToBot(new MakeTempCardInDiscardAction(new Slimed(), 3));
+                            m.addToBot(new MakeTempCardInDiscardAction(s, 2));
+//                            m.addToBot(new MakeTempCardInDiscardAction(new Slimed(), 3));
+//                            m.addToBot(new MakeTempCardInDiscardAction(new Burn(), 2));
+                            m.setMove(atk_defend, AbstractMonster.Intent.ATTACK_DEFEND, m.damage.get(2).base);
+//                            m.setMove(PREP_NAME, (byte) 2, AbstractMonster.Intent.UNKNOWN);
+                            break;
+                        case 2:
+                            playSfx();
+                            m.addToBot(new ShoutAction(m, monsterStrings.DIALOG[0], 1F, 2F));
+                            m.addToBot(new ShakeScreenAction(0.3F, ScreenShake.ShakeDur.LONG, ScreenShake.ShakeIntensity.LOW));
+                            m.setMove(SLAM_NAME, (byte) 1, AbstractMonster.Intent.ATTACK, m.damage.get(1).base);
+                            break;
+                        case atk_defend:
+                            AbstractDungeon.actionManager.addToBottom(new AnimateJumpAction(m));
+                            AbstractDungeon.actionManager.addToBottom(new VFXAction(new WeightyImpactEffect(AbstractDungeon.player.hb.cX, AbstractDungeon.player.hb.cY, new Color(0.1F, 1.0F, 0.1F, 0.0F))));
+                            m.addToBot(new DamageAction(LMSK.Player(), m.damage.get(2), POISON));
+                            m.addToBot(new GainBlockAction(m, block));
+                            m.setMove(SLAM_NAME, (byte) 1, AbstractMonster.Intent.ATTACK, m.damage.get(1).base);
+                            break;
+                        case 1:
+                            AbstractDungeon.actionManager.addToBottom(new AnimateJumpAction(m));
+                            AbstractDungeon.actionManager.addToBottom(new VFXAction(new WeightyImpactEffect(AbstractDungeon.player.hb.cX, AbstractDungeon.player.hb.cY, new Color(0.1F, 1.0F, 0.1F, 0.0F))));
+                            m.addToBot(new DamageAction(LMSK.Player(), m.damage.get(1), POISON));
+                            m.setMove(STICKY_NAME, (byte)4, AbstractMonster.Intent.STRONG_DEBUFF);
+                            break;
+                    }
+                    return true;
+                }
+                return false;
             };
         }
-        @SpirePatch2(clz = SlimeBoss.class, method = "takeTurn")
+    
+        private static void playSfx() {
+            int roll = MathUtils.random(1);
+            if (roll == 0) {
+                AbstractDungeon.actionManager.addToBottom(new SFXAction("VO_SLIMEBOSS_1A"));
+            } else {
+                AbstractDungeon.actionManager.addToBottom(new SFXAction("VO_SLIMEBOSS_1B"));
+            }
+        }
+        
+        @SpirePatch(clz = SlimeBoss.class, method = "damage")
+        public static class DamagePatch {
+            @SpirePrefixPatch
+            public static void Prefix(SlimeBoss _inst, DamageInfo info) {
+                int dmg = info.output;
+                if (_inst.currentHealth - dmg < 60)
+                    info.output = Math.abs(_inst.currentHealth - 60);
+            }
+            
+            @SpireInsertPatch(rloc = 2)
+            public static SpireReturn Insert(SlimeBoss _inst, DamageInfo info) {
+                if (!_inst.isDying && _inst.currentHealth <= 60 && _inst.nextMove != 3) {
+                    if (_inst.currentHealth < 60)
+                        _inst.currentHealth = 60;
+                    _inst.setMove(SPLIT_NAME, (byte) 3, AbstractMonster.Intent.UNKNOWN);
+                    _inst.createIntent();
+                    AbstractDungeon.actionManager.addToBottom(new TextAboveCreatureAction(_inst, TextAboveCreatureAction.TextType.INTERRUPTED));
+                    AbstractDungeon.actionManager.addToBottom(new SetMoveAction(_inst, SPLIT_NAME, (byte) 3, AbstractMonster.Intent.UNKNOWN));
+                }
+                return SpireReturn.Return();
+            }
+        }
+        
+//        @SpirePatch2(clz = SlimeBoss.class, method = "takeTurn")
         public static class TakeTurnPatch {
             @SpireInsertPatch(rloc = 11)
             public static void Insert(SlimeBoss __instance) {
@@ -1005,6 +1101,25 @@ public class SEVMonsterEditorManaged {
                     turnCount++;
                 }
                 e.setInt("turnCount", turnCount);
+                if (m.nextMove == 1) {
+                    for (int i = 0; i < 6; i++) {
+                        AbstractDungeon.actionManager.addToBottom(new VFXAction(m, new GhostIgniteEffect(AbstractDungeon.player.hb.cX +
+                                MathUtils.random(-120F, 120F) * Settings.scale, AbstractDungeon.player.hb.cY +
+                                MathUtils.random(-120F, 120F) * Settings.scale), 0.05F));
+                        if (MathUtils.randomBoolean()) {
+                            AbstractDungeon.actionManager.addToBottom(new SFXAction("GHOST_ORB_IGNITE_1", 0.3F));
+                        } else {
+                            AbstractDungeon.actionManager.addToBottom(new SFXAction("GHOST_ORB_IGNITE_2", 0.3F));
+                        }
+                        AbstractDungeon.actionManager.addToBottom(new DamageAction(AbstractDungeon.player, m.damage.get(2), BLUNT_HEAVY, true));
+                    }
+                    Burn b = new Burn();
+                    b.upgrade();
+                    m.addToBot(new MakeTempCardInDiscardAction(b, 3));
+                    AbstractDungeon.actionManager.addToBottom(new ChangeStateAction(m, "Deactivate"));
+                    AbstractDungeon.actionManager.addToBottom(new RollMoveAction(m));
+                    return true;
+                }
                 return false;
             };
         }
@@ -1132,6 +1247,12 @@ public class SEVMonsterEditorManaged {
                     }
                 });
                 m.addPower(new MetallicizePower(m, 5));
+            };
+            e.preBattle = m -> {
+                Dazed d = new Dazed();
+                d.upgrade();
+                m.addToBot(new MakeTempCardInDrawPileAction(d, 2, true, true));
+                return false;
             };
             e.putBool("firstTurn", true);
             e.takeTurn = m -> {
@@ -1569,14 +1690,15 @@ public class SEVMonsterEditorManaged {
         public static void Edit(AbstractMonster _inst) {
             MonsterEditor e = GetModifierEditor(_inst);
             e.initFunc = m -> {
-                setMonsterHp(m, 170);
+                setMonsterHp(m, 150);
                 m.damage.clear();
-                m.damage.add(attack_1, new DamageInfo(m, 1));
-                m.damage.add(attack_2, new DamageInfo(m, 1));
+                m.damage.add(attack_1, new DamageInfo(m, 2));
+                m.damage.add(attack_2, new DamageInfo(m, 2));
                 m.damage.add(attack_3, new DamageInfo(m, 25));
                 m.addPower(new ThornsPower(m, 2));
+                m.addPower(new ToughPower(m, 3, 3));
             };
-            e.putInt("multiCount", 20);
+            e.putInt("multiCount", 15);
             e.takeTurn = m -> {
                 int multiCount = e.getInt("multiCount");
                 switch (m.nextMove) {
@@ -1586,7 +1708,7 @@ public class SEVMonsterEditorManaged {
                             m.addToBot(new SFXAction("MONSTER_BOOK_STAB_" + MathUtils.random(0, 3)));
                             m.addToBot(new DamageAction(LMSK.Player(), m.damage.get(attack_1), SLASH_VERTICAL));
                         }
-                        multiCount += 10;
+                        multiCount += 5;
                         break;
                     case attack_2:
                         m.addToBot(new ChangeStateAction(m, "ATTACK"));
@@ -1594,7 +1716,7 @@ public class SEVMonsterEditorManaged {
                             m.addToBot(new SFXAction("MONSTER_BOOK_STAB_" + MathUtils.random(0, 3)));
                             m.addToBot(new DamageAction(LMSK.Player(), m.damage.get(attack_2), SLASH_VERTICAL));
                         }
-                        multiCount += 10;
+                        multiCount += 5;
                         break;
                     case attack_3:
                         AbstractPower p = m.getPower(StrengthPower.POWER_ID);
@@ -1632,6 +1754,31 @@ public class SEVMonsterEditorManaged {
                 setMonsterHp(m, 300);
                 m.damage.get(0).base = 20;
                 m.damage.get(0).output = 20;
+                m.addPower(new TimeWarpPower(m){
+                    @Override
+                    public void updateDescription() {
+                        this.name = "破碎的时间扭曲";
+                        super.updateDescription();
+                        this.description = this.description.replace(TimeEater.NAME, TheCollector.NAME).concat("触发一次后消失");
+                    }
+    
+                    @Override
+                    public void onAfterUseCard(AbstractCard card, UseCardAction action) {
+                        flashWithoutSound();
+                        ++amount;
+                        if (amount == 12) {
+                            amount = 0;
+                            playApplyPowerSfx();
+                            AbstractDungeon.actionManager.callEndTurnEarlySequence();
+                            CardCrawlGame.sound.play("POWER_TIME_WARP", 0.05F);
+                            AbstractDungeon.effectsQueue.add(new BorderFlashEffect(Color.GOLD, true));
+                            AbstractDungeon.topLevelEffectsQueue.add(new TimeWarpTurnEndEffect());
+                            addToBot(new ApplyPowerAction(owner, owner, new StrengthPower(owner, 2), 2));
+                            addToBot(new RemoveSpecificPowerAction(owner, owner, this));
+                        }
+                        updateDescription();
+                    }
+                });
             };
             e.putBool("firstTurn", true);
             e.preBattle = m -> {
@@ -1684,6 +1831,7 @@ public class SEVMonsterEditorManaged {
                 setMonsterHp(m, 300);
                 m.addPower(new PlatedArmorPower(m, 5));
                 m.addPower(new MetallicizePower(m, 5));
+                m.addPower(new BronzeLifeCounterPower(m, 90));
             };
             e.preBattle = m -> {
                 m.addToBot(new GainBlockAction(m, m, 5));
@@ -1739,6 +1887,33 @@ public class SEVMonsterEditorManaged {
                 }
                 return true;
             };
+        }
+    }
+    @SEMonsterEditor(m = BronzeOrb.class)
+    public static class BronzeOrbSE {
+        public static void Edit(AbstractMonster _inst) {
+            MonsterEditor e = GetModifierEditor(_inst);
+        }
+        @SpirePatch(clz = BronzeOrb.class, method = SpirePatch.CONSTRUCTOR)
+        public static class DiePatch {
+            @SpireRawPatch
+            public static void Raw(CtBehavior ctBehavior) throws Exception {
+                CtClass orbClz = ctBehavior.getDeclaringClass();
+                CtMethod die = CtNewMethod.make(CtClass.voidType, "die", new CtClass[0], null, 
+                        "{super.die();" + DiePatch.class.getName() + ".Die(this);}", orbClz);
+                orbClz.addMethod(die);
+            }
+            public static void Die(BronzeOrb orb) {
+                MonsterEditor e = GetModifierEditor(orb);
+                if (e.canModify()) {
+                    for (AbstractMonster m : LMSK.GetAllExptMstr(m -> m instanceof BronzeAutomaton)) {
+                        m.powers.stream().filter(p -> p instanceof BronzeLifeCounterPower)
+                                .findFirst()
+                                .map(p -> (BronzeLifeCounterPower) p)
+                                .ifPresent(p -> p.onBronzeDie(orb));
+                    }
+                }
+            }
         }
     }
     @SEMonsterEditor(m = Champ.class)
@@ -1899,6 +2074,7 @@ public class SEVMonsterEditorManaged {
                     m.addToBot(new ChangeStateAction(m, "REVIVE"));
                     for (AbstractRelic r : LMSK.Player().relics)
                         r.onSpawnMonster(m);
+                    m.addToBot(new RollMoveAction(m));
                     return true;
                 }
                 return false;
@@ -2605,30 +2781,190 @@ public class SEVMonsterEditorManaged {
     }
     @SEMonsterEditor(m = TimeEater.class)
     public static class TimeEaterSE {
+        private static final byte multi_atk = -9;
+        private static final int atkDmg = 6;
+        private static final int atkTimes = 4;
+        
         public static void Edit(AbstractMonster _inst) {
             MonsterEditor e = GetModifierEditor(_inst);
             e.initFunc = m -> {
                 setMonsterHp(m, 500);
-                m.damage.get(0).base = 7;
-                m.damage.get(0).output = 7;
+                m.damage.get(0).base = 8;
+                m.damage.get(0).output = 8;
+                m.damage.add(new DamageInfo(m, atkDmg));
+                e.putBool("haste", false);
                 m.addPower(new ArtifactPower(m, 1));
-                m.addPower(new InvinciblePower(m, 100));
+                m.addPower(new InvinciblePower(m, 0){
+                    @Override
+                    public void updateDescription() {
+                        this.name = "坚不可摧改";
+                        this.description = "血量变为250时，本回合锁血，并且更改意图。";
+                    }
+    
+                    @Override
+                    public int onAttackedToChangeDamage(DamageInfo info, int damageAmount) {
+                        if (owner instanceof TimeEater) {
+                            MonsterEditor e = GetEditor((AbstractMonster) owner);
+                            if (e.getBool("haste")) {
+                                info.output = 0;
+                                damageAmount = 0;
+                            }
+                        }
+                        return damageAmount;
+                    }
+    
+                    @Override
+                    public int onAttacked(DamageInfo info, int damageAmount) {
+                        if (owner instanceof TimeEater) {
+                            MonsterEditor e = GetEditor((AbstractMonster) owner);
+                            if (e.getBool("haste")) {
+                                info.output = 0;
+                                damageAmount = 0;
+                            }
+                        }
+                        return super.onAttacked(info, damageAmount);
+                    }
+                });
+                m.addPower(new TimeWarpPower(m){
+                    @Override
+                    public void updateDescription() {
+                        this.description = DESC[0] + 10 + DESC[1] + 2 + DESC[2];
+                    }
+    
+                    @Override
+                    public void onAfterUseCard(AbstractCard card, UseCardAction action) {
+                        this.flashWithoutSound();
+                        ++this.amount;
+                        if (this.amount == 10) {
+                            this.amount = 0;
+                            this.playApplyPowerSfx();
+                            AbstractDungeon.actionManager.callEndTurnEarlySequence();
+                            CardCrawlGame.sound.play("POWER_TIME_WARP", 0.05F);
+                            AbstractDungeon.effectsQueue.add(new BorderFlashEffect(Color.GOLD, true));
+                            AbstractDungeon.topLevelEffectsQueue.add(new TimeWarpTurnEndEffect());
+                            Iterator var3 = AbstractDungeon.getMonsters().monsters.iterator();
+        
+                            while(var3.hasNext()) {
+                                AbstractMonster m = (AbstractMonster)var3.next();
+                                this.addToBot(new ApplyPowerAction(m, m, new StrengthPower(m, 2), 2));
+                            }
+                        }
+    
+                        this.updateDescription();
+                    }
+                });
+            };
+            e.preBattle = m -> {
+                CardCrawlGame.music.unsilenceBGM();
+                AbstractDungeon.scene.fadeOutAmbiance();
+                AbstractDungeon.getCurrRoom().playBgmInstantly("BOSS_BEYOND");
+                UnlockTracker.markBossAsSeen("WIZARD");
+                return true;
             };
             e.takeTurn = m -> {
+                boolean haste = e.getBool("haste");
                 if (m.nextMove == 5) {
                     m.addToBot(new ShoutAction(m, TimeEater.DIALOG[1], 0.5F, 2F));
                     m.addToBot(new RemoveDebuffsAction(m));
                     m.addToBot(new RemoveSpecificPowerAction(m, m, GainStrengthPower.POWER_ID));
                     m.addToBot(new RemoveSpecificPowerAction(m, m, InvinciblePower.POWER_ID));
                     m.addToBot(new HealAction(m, m, m.maxHealth));
-                    m.addToBot(new GainBlockAction(m, m, 40));
-                    m.addToBot(new ApplyPowerAction(LMSK.Player(), m, new WeakPower(LMSK.Player(), 5, true)));
-                    m.addToBot(new MakeTempCardInDiscardAction(new Slimed(), 5));
+                    Slimed s = new Slimed();
+                    s.upgrade();
+                    m.addToBot(new MakeTempCardInDrawPileAction(s, 3, true, true));
+                    m.addToBot(new RollMoveAction(m));
+                    m.damage.get(1).base = 50;
+                    m.damage.get(1).output = 50;
+                    return true;
+                } else if (m.nextMove == multi_atk) {
+                    for (int i = 0; i < atkTimes; i++) {
+                        m.addToBot(new VFXAction(m, new ShockWaveEffect(m.hb.cX, m.hb.cY, Settings.BLUE_TEXT_COLOR, ShockWaveEffect.ShockWaveType.CHAOTIC), 0.75F));
+                        m.addToBot(new DamageAction(AbstractDungeon.player, m.damage.get(2), FIRE));
+                    }
+                    m.addToBot(new ApplyPowerAction(LMSK.Player(), m, new LoseEnergyPower(LMSK.Player(), 1)));
+                    m.addToBot(new RollMoveAction(m));
+                    return true;
+                } else if (haste && m.nextMove == 4) {
+                    m.addToBot(new ChangeStateAction(m, "ATTACK"));
+                    m.addToBot(new WaitAction(0.4F));
+                    m.addToBot(new DamageAction(AbstractDungeon.player, m.damage.get(1), POISON));
+                    m.addToBot(new ApplyPowerAction(AbstractDungeon.player, m, new DrawReductionPower(AbstractDungeon.player, 1)));
+                    Wound w = new Wound();
+                    w.upgrade();
+                    m.addToBot(new MakeTempCardInDiscardAction(w, 1));
+                    m.addToBot(new RollMoveAction(m));
+                    return true;
+                } else if (haste && m.nextMove == 3) {
+                    m.addToBot(new GainBlockAction(m, m, 50));
+                    m.addToBot(new ApplyPowerAction(LMSK.Player(), m, new FrailPower(LMSK.Player(), 2, true)));
+                    m.addToBot(new ApplyPowerAction(LMSK.Player(), m, new VulnerablePower(LMSK.Player(), 2, true)));
+                    m.addToBot(new ApplyPowerAction(LMSK.Player(), m, new WeakPower(LMSK.Player(), 2, true)));
+                    Wound w = new Wound();
+                    w.upgrade();
+                    m.addToBot(new MakeTempCardInDiscardAction(w, 1));
+                    Slimed s = new Slimed();
+                    s.upgrade();
+                    m.addToBot(new MakeTempCardInDiscardAction(s, 1));
                     m.addToBot(new RollMoveAction(m));
                     return true;
                 }
                 return false;
             };
+            e.getMove = (m, roll) -> {
+                boolean usedHaste = getBool(TimeEater.class, m, "usedHaste");
+                if (m.currentHealth < m.maxHealth / 2 && !usedHaste) {
+                    usedHaste = true;
+                    e.setBool("haste", true);
+                    setField(TimeEater.class, m, "usedHaste", usedHaste);
+                    m.setMove((byte) 5, AbstractMonster.Intent.BUFF);
+                } else if (roll < 45) {
+                    if (e.getBool("haste") && !lastTwoMoves(m, multi_atk)) {
+                        m.setMove(multi_atk, AbstractMonster.Intent.ATTACK_DEBUFF, m.damage.get(2).base, atkTimes, true);
+                    } else if (!e.getBool("haste") && !lastTwoMoves(m, (byte) 2)) {
+                        m.setMove((byte) 2, AbstractMonster.Intent.ATTACK, (m.damage.get(0)).base, 3, true);
+                    } else {
+                        getMove(m, AbstractDungeon.aiRng.random(50, 99));
+                    }
+                } else if (roll < 80) {
+                    if (!lastMove(m, (byte) 4)) {
+                        m.setMove((byte) 4, AbstractMonster.Intent.ATTACK_DEBUFF, (m.damage.get(1)).base);
+                    } else if (AbstractDungeon.aiRng.randomBoolean(0.66F)) {
+                        if (e.getBool("haste")) {
+                            m.setMove(multi_atk, AbstractMonster.Intent.ATTACK_DEBUFF, m.damage.get(2).base, atkTimes, true);
+                        } else {
+                            m.setMove((byte) 2, AbstractMonster.Intent.ATTACK, (m.damage.get(0)).base, 3, true);
+                        }
+                    } else {
+                        m.setMove((byte) 3, AbstractMonster.Intent.DEFEND_DEBUFF);
+                    }
+                } else if (!lastMove(m, (byte) 3)) {
+                    m.setMove((byte) 3, AbstractMonster.Intent.DEFEND_DEBUFF);
+                } else {
+                    getMove(m, AbstractDungeon.aiRng.random(74));
+                }
+                return true;
+            };
+        }
+        @SpirePatch(clz = TimeEater.class, method = "damage")
+        public static class DamagePatch {
+            @SpirePrefixPatch
+            public static void Prefix(TimeEater _inst, DamageInfo info) {
+                int dmg = info.output;
+                MonsterEditor e = GetEditor(_inst);
+                if (_inst.currentHealth - dmg < 250 && !e.getBool("haste"))
+                    info.output = Math.abs(_inst.currentHealth - 250);
+            }
+            
+            @SpirePostfixPatch
+            public static void Postfix(TimeEater _inst, DamageInfo info) {
+                MonsterEditor e = GetEditor(_inst);
+                if (e.canModify() && !_inst.isDying && _inst.currentHealth <= 250 && !e.getBool("haste")) {
+                    e.setBool("haste", true);
+                    setField(TimeEater.class, _inst, "usedHaste", true);
+                    _inst.setMove((byte) 5, AbstractMonster.Intent.BUFF);
+                    _inst.createIntent();
+                }
+            }
         }
     }
     @SEMonsterEditor(m = AwakenedOne.class)
@@ -2636,7 +2972,7 @@ public class SEVMonsterEditorManaged {
         private static final byte reborn = -1;
         private static final byte attack = 0;
         private static final byte multi = 1;
-        private static final byte buff = 2;
+        private static final byte buff = 9;
         private static final int multiCount = 5;
         public static void Edit(AbstractMonster _inst) {
             MonsterEditor e = GetModifierEditor(_inst);
@@ -2666,7 +3002,8 @@ public class SEVMonsterEditorManaged {
                             m.addToBot(new VFXAction(new ShockWaveEffect(m.hb.cX, m.hb.cY, new Color(0.1F, 0F, 0.2F, 1F),
                                     ShockWaveEffect.ShockWaveType.CHAOTIC), 0.3F));
                             m.addToBot(new DamageAction(LMSK.Player(), m.damage.get(attack), FIRE));
-                            m.addToBot(new MakeTempCardInDiscardAction(new VoidCard(), 1));
+                            
+                            m.addToBot(new MakeTempCardInDiscardAction(new VoidCard(), 2));
                             break;
                         case multi:
                             m.addToBot(new SFXAction("MONSTER_AWAKENED_ATTACK"));
@@ -2675,6 +3012,10 @@ public class SEVMonsterEditorManaged {
                                         ShockWaveEffect.ShockWaveType.CHAOTIC), 0.3F));
                                 m.addToBot(new DamageAction(LMSK.Player(), m.damage.get(multi), BLUNT_HEAVY));
                             }
+    
+                            VoidCard v = new VoidCard();
+                            v.upgrade();
+                            m.addToBot(new MakeTempCardInDrawPileAction(v, 1, true, true));
                             break;
                         case buff:
                             m.addToBot(new ApplyPowerAction(m, m, new StrengthPower(m, 3)));
@@ -2722,6 +3063,11 @@ public class SEVMonsterEditorManaged {
             public static SpireReturn PrefixGet(AwakenedOne __instance, String key) {
                 MonsterEditor e = GetEditor(__instance);
                 if (e.canModify() && "REBIRTH".equals(key)) {
+                    { // add void on reborn
+                        VoidCard v = new VoidCard();
+                        v.upgrade();
+                        __instance.addToBot(new MakeTempCardInDrawPileAction(v, 1, true, true));
+                    }
                     if (e.getBool("form3")) {
                         __instance.maxHealth = 350;
                     } else {
@@ -2826,15 +3172,17 @@ public class SEVMonsterEditorManaged {
         private static final byte reborn = -1;
         private static final byte attack = 0;
         private static final byte buff = 1;
+        private static final int multiAtkDmg = 12;
         private static final int multiCount = 2;
         public static void Edit(AbstractMonster _inst) {
             MonsterEditor e = GetModifierEditor(_inst);
             e.initFunc = m -> {
-                setMonsterHp(m, 270);
+                setMonsterHp(m, 300);
                 m.damage.clear();
-                m.damage.add(new DamageInfo(m, 10));
-                m.addPower(new InvinciblePower(m, 150));
+                m.damage.add(new DamageInfo(m, multiAtkDmg));
+//                m.addPower(new InvinciblePower(m, 150));
                 m.addPower(new BarricadePower(m));
+                m.addPower(new DecaCardCounterPower(m, 8));
             };
             e.preBattle = m -> {
                 CardCrawlGame.music.unsilenceBGM();
@@ -2941,15 +3289,17 @@ public class SEVMonsterEditorManaged {
         private static final byte reborn = -1;
         private static final byte attack = 0;
         private static final byte buff = 1;
+        private static final int multiAtkDmg = 12;
         private static final int multiCount = 2;
         public static void Edit(AbstractMonster _inst) {
             MonsterEditor e = GetModifierEditor(_inst);
             e.initFunc = m -> {
-                setMonsterHp(m, 270);
+                setMonsterHp(m, 300);
                 m.damage.clear();
-                m.damage.add(new DamageInfo(m, 10));
-                m.addPower(new InvinciblePower(m, 150));
+                m.damage.add(new DamageInfo(m, multiAtkDmg));
+//                m.addPower(new InvinciblePower(m, 150));
                 m.addPower(new BarricadePower(m));
+                m.addPower(new DonuCardCounterPower(m, 3));
             };
             e.preBattle = m -> {
                 AbstractDungeon.getCurrRoom().cannotLose = true;
@@ -3054,7 +3404,29 @@ public class SEVMonsterEditorManaged {
                 m.damage.add(first_atk, new DamageInfo(m, 5));
                 m.damage.add(attack, new DamageInfo(m, 5));
                 m.addPower(new BufferPower(m, 3));
-                m.addPower(new BurntBurnPower(m, 2));
+//                m.addPower(new BurntBurnPower(m, 2));
+                m.addPower(new TimeWarpPower(m){
+                    @Override
+                    public void updateDescription() {
+                        this.description = DESC[0] + 15 + DESC[1].replace(TimeEater.NAME, this.owner.name) + 2 + DESC[2];
+                    }
+        
+                    @Override
+                    public void onAfterUseCard(AbstractCard card, UseCardAction action) {
+                        flashWithoutSound();
+                        this.amount++;
+                        if (this.amount == 15) {
+                            this.amount = 0;
+                            this.playApplyPowerSfx();
+                            AbstractDungeon.actionManager.callEndTurnEarlySequence();
+                            CardCrawlGame.sound.play("POWER_TIME_WARP", 0.05F);
+                            AbstractDungeon.effectsQueue.add(new BorderFlashEffect(Color.GOLD, true));
+                            AbstractDungeon.topLevelEffectsQueue.add(new TimeWarpTurnEndEffect());
+                            addToBot(new ApplyPowerAction(this.owner, this.owner, new StrengthPower(this.owner, 2)));
+                        }
+                        this.updateDescription();
+                    }
+                });
             };
             e.putBool("firstTurn", true);
             e.putBool("aloneBuff", false);
@@ -3113,13 +3485,15 @@ public class SEVMonsterEditorManaged {
                 return true;
             };
             e.postUpdate = m -> {
-                if (!e.getBool("aloneBuff") && alone(m)) {
-                    e.setBool("aloneBuff", true);
-                    m.addToTop(new ApplyPowerAction(m, m, new StrengthPower(m, 5)));
-                    m.addToTop(new ApplyPowerAction(m, m, new BufferPower(m, 10)));
-                    m.setMove(attack, AbstractMonster.Intent.ATTACK, m.damage.get(attack).base, multiCount, true);
-                    m.createIntent();
-                    m.applyPowers();
+                if (true) {
+                    if (!e.getBool("aloneBuff") && alone(m)) {
+                        e.setBool("aloneBuff", true);
+                        m.addToTop(new ApplyPowerAction(m, m, new StrengthPower(m, 5)));
+                        m.addToTop(new ApplyPowerAction(m, m, new BufferPower(m, 10)));
+                        m.setMove(attack, AbstractMonster.Intent.ATTACK, m.damage.get(attack).base, multiCount, true);
+                        m.createIntent();
+                        m.applyPowers();
+                    }
                 }
             };
         }
@@ -3127,7 +3501,7 @@ public class SEVMonsterEditorManaged {
             return LMSK.GetAllExptMstr(m -> m != self).size() <= 0;
         }
         
-        @SpirePatch2(clz = AbstractMonster.class, method = "die", paramtypez = {boolean.class})
+//        @SpirePatch2(clz = AbstractMonster.class, method = "die", paramtypez = {boolean.class})
         public static class DiePatch {
             @SpirePostfixPatch
             public static void Postfix(AbstractMonster __instance) {
@@ -3157,7 +3531,29 @@ public class SEVMonsterEditorManaged {
                 m.damage.add(alone_1, new DamageInfo(m, 0));
                 m.addPower(new MetallicizePower(m, 10));
                 m.addPower(new BarricadePower(m));
-                m.addPower(new FeelingSamePower(m, 2));
+//                m.addPower(new FeelingSamePower(m, 2));
+                m.addPower(new TimeWarpPower(m){
+                    @Override
+                    public void updateDescription() {
+                        this.description = DESC[0] + 15 + DESC[1].replace(TimeEater.NAME, this.owner.name) + 2 + DESC[2];
+                    }
+        
+                    @Override
+                    public void onAfterUseCard(AbstractCard card, UseCardAction action) {
+                        flashWithoutSound();
+                        this.amount++;
+                        if (this.amount == 15) {
+                            this.amount = 0;
+                            this.playApplyPowerSfx();
+                            AbstractDungeon.actionManager.callEndTurnEarlySequence();
+                            CardCrawlGame.sound.play("POWER_TIME_WARP", 0.05F);
+                            AbstractDungeon.effectsQueue.add(new BorderFlashEffect(Color.GOLD, true));
+                            AbstractDungeon.topLevelEffectsQueue.add(new TimeWarpTurnEndEffect());
+                            addToBot(new ApplyPowerAction(this.owner, this.owner, new StrengthPower(this.owner, 2)));
+                        }
+                        this.updateDescription();
+                    }
+                });
             };
             e.preBattle = m -> {
                 m.addToBot(new GainBlockAction(m, m, 50));
@@ -3234,16 +3630,18 @@ public class SEVMonsterEditorManaged {
                 return true;
             };
             e.postUpdate = m -> {
-                if (!e.getBool("aloneBuff") && alone(m)) {
-                    e.setBool("aloneBuff", true);
-                    m.addToTop(new QuickAction(() -> {
-                        m.damage.get(alone_1).base = m.currentBlock + 10;
-                        m.setMove(alone_1, AbstractMonster.Intent.ATTACK, m.damage.get(alone_1).base);
-                        m.createIntent();
-                        m.applyPowers();
-                    }));
-                    m.addToTop(new QuickAction(() -> m.increaseMaxHp(100, true)));
-                    m.addToTop(new GainBlockAction(m, 100));
+                if (true) {
+                    if (!e.getBool("aloneBuff") && alone(m)) {
+                        e.setBool("aloneBuff", true);
+                        m.addToTop(new QuickAction(() -> {
+                            m.damage.get(alone_1).base = m.currentBlock + 10;
+                            m.setMove(alone_1, AbstractMonster.Intent.ATTACK, m.damage.get(alone_1).base);
+                            m.createIntent();
+                            m.applyPowers();
+                        }));
+                        m.addToTop(new QuickAction(() -> m.increaseMaxHp(100, true)));
+                        m.addToTop(new GainBlockAction(m, 100));
+                    }
                 }
             };
         }
@@ -3272,7 +3670,7 @@ public class SEVMonsterEditorManaged {
                 }
             }
         }
-        @SpirePatch2(clz = AbstractMonster.class, method = "die", paramtypez = {boolean.class})
+//        @SpirePatch2(clz = AbstractMonster.class, method = "die", paramtypez = {boolean.class})
         public static class DiePatch {
             @SpirePostfixPatch
             public static void Postfix(AbstractMonster __instance) {
