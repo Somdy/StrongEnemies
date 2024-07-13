@@ -37,7 +37,7 @@ public class TestMonsterEx extends AbstractMonster implements LMGameGeneralUtils
         e.setTime(e.getEndTime() * MathUtils.random());
         eye = skeleton.findBone("head");
         damage.add(new DamageInfo(this, 5));
-        damage.add(new DamageInfo(this, 45));
+        damage.add(new DamageInfo(this, 35));
         addPower(new LifeCounterPower(this, 30));
         addPower(new CardCounterPower(this, 7));
     }
@@ -54,8 +54,8 @@ public class TestMonsterEx extends AbstractMonster implements LMGameGeneralUtils
                 addToBot(new DamageAction(LMSK.Player(), damage.get(1), AbstractGameAction.AttackEffect.SLASH_HEAVY));
                 break;
             case buff:
-                addToBot(new GainBlockAction(this, this, 20));
-                addToBot(new ApplyPowerAction(this, this, new BufferPower(this, 3)));
+                addToBot(new GainBlockAction(this, this, 30));
+                addToBot(new ApplyPowerAction(this, this, new BufferPower(this, 2)));
                 break;
         }
         addToBot(new RollMoveAction(this));

@@ -112,7 +112,7 @@ public class EvilGod extends AbstractMonster implements LMGameGeneralUtils {
                 }
             }
         });
-        addInitialPower(new PowerLimitationPower(this).apply());
+//        addInitialPower(new PowerLimitationPower(this).apply());
         addInitialPower(new CardLimitationPower(this));
         addInitialPower(new ConfessionPower(this, 200));
         addInitialPower(new ExtraIntentsPower(this));
@@ -199,6 +199,9 @@ public class EvilGod extends AbstractMonster implements LMGameGeneralUtils {
         CardCrawlGame.music.unsilenceBGM();
         AbstractDungeon.scene.fadeOutAmbiance();
         CardCrawlGame.music.playTempBgmInstantly("SE_EG_BGM.mp3", true);
+        PowerLimitationPower p = new PowerLimitationPower(this);
+        perpetuals.add(p);
+        addToBot(new ApplyPowerAction(this, this, p));
         addToBot(new MakeTempCardInHandAction(new Voidness(), 1));
     }
     
@@ -380,6 +383,10 @@ public class EvilGod extends AbstractMonster implements LMGameGeneralUtils {
                     powers.removeIf(po -> po instanceof ConfessionPower);
                     p.onRemove();
                     AbstractDungeon.onModifyPower();
+                }
+                p = getPower(PowerLimitationPower.ID);
+                if (p instanceof PowerLimitationPower) {
+                    ((PowerLimitationPower) p).updateLimitation(15);
                 }
             }
             heal(maxHealth);
@@ -780,7 +787,7 @@ public class EvilGod extends AbstractMonster implements LMGameGeneralUtils {
             boolean db = AbstractDungeon.ascensionLevel >= 20 && LMSK.Player().hasRelic(CultistMask.ID);
             if (db && !AbstractDungeon.bossList.isEmpty()) {
                 AbstractDungeon.bossList.clear();
-                AbstractDungeon.bossList.add(ID);
+                AbstractDungeon.bossList.add(EvilGod.ID);
                 if (CardCrawlGame.stopClock)
                     CardCrawlGame.stopClock = false;
                 return true;

@@ -38,12 +38,14 @@ public class SEVGreenCardEditorManaged {
         AbstractDungeon.actionManager.addToTop(action);
     }
     
-    @SECardEditor(card = Acrobatics.class)
+//    @SECardEditor(card = Acrobatics.class)
     public static class AcrobaticsSE {
         private static final CardStrings strings = King.CardStrings(King.MakeID("Acrobatics"));
         public static void Edit(AbstractCard _inst) {
             CardEditor e = GetModifierEditor(_inst);
-            e.initFunc = c -> updateCardDesc(c, strings.DESCRIPTION);
+            e.initFunc = c -> {
+                updateCardDesc(c, strings.DESCRIPTION);
+            };
             e.use = (c,p,m) -> {
                 addToBot(new DrawCardAction(p, c.magicNumber));
                 addToBot(new DamageAction(p, new DamageInfo(p, 4, DamageInfo.DamageType.THORNS)));
@@ -125,7 +127,7 @@ public class SEVGreenCardEditorManaged {
             CardEditor e = GetModifierEditor(_inst);
             e.initFunc = c -> {
                 updateCardDesc(c, strings.DESCRIPTION);
-                c.baseMagicNumber = c.magicNumber = 2;
+                c.baseMagicNumber = c.magicNumber = 3;
             };
             e.use = (c,p,m) -> {
                 addToBot(new LoseHPAction(p, p, 3));

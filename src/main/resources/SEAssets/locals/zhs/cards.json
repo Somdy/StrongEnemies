@@ -146,5 +146,9 @@
     "NAME": "分配",
     "DESCRIPTION": "获得 !M! 点 集中，失去 !M! 点 力量 !M! 点 敏捷 。",
     "UPGRADE_DESCRIPTION": "获得 !M! 点 集中，失去 !M! 点 力量 !M! 点 敏捷 。"
+  },
+  "strong:GreatAcrobatics": {
+    "NAME": "大杂技",
+    "DESCRIPTION": "抽 !M! 张牌。 NL 丢弃 1 张牌。丢弃的牌视为打出。"
   }
 }

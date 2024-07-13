@@ -16,14 +16,25 @@ public class PowerLimitationPower extends AbstractSEPower {
     public static final String ID = King.MakeID("GodVisionPower");
     private int pID = -1;
     
-    public PowerLimitationPower(AbstractCreature owner) {
+    public PowerLimitationPower(AbstractCreature owner, int limitation) {
         super(ID, "godvision", PowerType.BUFF, owner);
-        setValues(-1);
+        setValues(-1, limitation);
+        preloadString(s -> setAmtValue(0, extraAmt));
+        updateDescription();
+    }
+    
+    public PowerLimitationPower(AbstractCreature owner) {
+        this(owner, 5);
+    }
+    
+    public void updateLimitation(int newLimit) {
+        setValues(amount, newLimit);
         updateDescription();
     }
     
     public PowerLimitationPower apply() {
         Predicate<AbstractPower> invisible = p -> Loader.isModLoadedOrSideloaded("stslib") && p instanceof InvisiblePower;
+        ApplyPowerListener.RemoveManipulator(pID);
         pID = ApplyPowerListener.AddNewManipulator(ID.length(), 0, e -> owner.hasPower(ID), (p, t, s) -> {
             if (t instanceof AbstractPlayer && isPowerTypeOf(p, PowerType.BUFF)) {
                 int buffTypes = t.powers.stream()
@@ -31,8 +42,9 @@ public class PowerLimitationPower extends AbstractSEPower {
                         .mapToInt(po -> 1)
                         .sum();
                 PowerLimitationPower.this.amount = buffTypes;
+                King.Log("Max buff allowed: " + PowerLimitationPower.this.extraAmt);
                 if (PowerLimitationPower.this.amount < 0) PowerLimitationPower.this.amount = 0;
-                if (PowerLimitationPower.this.amount >= 5) {
+                if (PowerLimitationPower.this.amount >= PowerLimitationPower.this.extraAmt) {
                     p = t.hasPower(p.ID) ? p : null;
                 }
             }
@@ -47,12 +59,18 @@ public class PowerLimitationPower extends AbstractSEPower {
     }
     
     @Override
+    public void onVictory() {
+        ApplyPowerListener.RemoveManipulator(pID);
+    }
+    
+    @Override
     public void onRemove() {
         ApplyPowerListener.RemoveManipulator(pID);
     }
     
     public void updateOnPowersModified() {
-        amount = LMSK.Player().powers.stream().filter(p -> isPowerTypeOf(p, PowerType.BUFF)).mapToInt(p -> 1).sum();
+        Predicate<AbstractPower> invisible = p -> Loader.isModLoadedOrSideloaded("stslib") && p instanceof InvisiblePower;
+        amount = LMSK.Player().powers.stream().filter(p -> isPowerTypeOf(p, PowerType.BUFF) && !invisible.test(p)).mapToInt(p -> 1).sum();
         if (amount < 0) amount = 0;
     }
     

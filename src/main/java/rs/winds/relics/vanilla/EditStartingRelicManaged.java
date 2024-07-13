@@ -13,8 +13,12 @@ import com.megacrit.cardcrawl.relics.*;
 import javassist.*;
 import javassist.bytecode.*;
 import javassist.convert.Transformer;
+import javassist.expr.ExprEditor;
+import javassist.expr.FieldAccess;
 import rs.lazymankits.utils.LMSK;
+import rs.winds.core.King;
 
+@SuppressWarnings("unused")
 public class EditStartingRelicManaged {
     @SpirePatch(clz = BurningBlood.class, method = "getUpdatedDescription")
     public static class BurningBloodSE {
@@ -172,6 +176,7 @@ public class EditStartingRelicManaged {
     
     @SpirePatch(clz = SnakeRing.class, method = "getUpdatedDescription")
     public static class SnakeRingSE {
+        protected static int ORIGIN_MASTER_HAND_SIZE = -1;
         @SpirePostfixPatch
         public static String Postfix(String _result, AbstractRelic _inst) {
             _result = "每回合开始时，额外抽一张牌，丢弃一张牌。";
@@ -183,7 +188,8 @@ public class EditStartingRelicManaged {
             CtMethod abs = ctClass.getDeclaredMethod("atBattleStart");
             ctClass.removeMethod(abs);
             CtMethod oe = CtNewMethod.make(CtClass.voidType, "onEquip", new CtClass[0], null, 
-                    "{" + AbstractDungeon.class.getName() + ".player.masterHandSize++;}", ctClass);
+                    "{" + SnakeRingSE.class.getName() + ".InitializeDefaultHandSize();"
+                            + AbstractDungeon.class.getName() + ".player.masterHandSize++;}", ctClass);
             CtMethod oue = CtNewMethod.make(CtClass.voidType, "onUnequip", new CtClass[0], null,
                     "{" + AbstractDungeon.class.getName() + ".player.masterHandSize--;}", ctClass);
             CtMethod atspd = CtNewMethod.make(CtClass.voidType, "atTurnStartPostDraw", new CtClass[0], null,
@@ -191,6 +197,10 @@ public class EditStartingRelicManaged {
             ctClass.addMethod(oe);
             ctClass.addMethod(oue);
             ctClass.addMethod(atspd);
+        }
+        
+        public static void InitializeDefaultHandSize() {
+            ORIGIN_MASTER_HAND_SIZE = AbstractDungeon.player.masterHandSize;
         }
         
         public static void RingTurnStart(AbstractRelic r) {
@@ -201,9 +211,11 @@ public class EditStartingRelicManaged {
     
     @SpirePatch(clz = RingOfTheSerpent.class, method = "getUpdatedDescription")
     public static class RingOfTheSerpentSE {
+        public static final int TARGET_MASTER_HAND_SIZE_DELTA = 2;
+        public static int MASTER_HAND_SIZE_DELTA = 0;
         @SpirePostfixPatch
         public static String Postfix(String _result, AbstractRelic _inst) {
-            _result = "每回合开始时，额外抽两张牌，丢弃一张牌。";
+            _result = String.format("每回合开始时，额外抽 #b%d 张牌，丢弃一张牌。", TARGET_MASTER_HAND_SIZE_DELTA);
             return _result;
         }
         @SpireRawPatch
@@ -212,12 +224,47 @@ public class EditStartingRelicManaged {
             CtMethod ats = ctClass.getDeclaredMethod("atTurnStart");
             ctClass.removeMethod(ats);
             CtMethod oe = ctClass.getDeclaredMethod("onEquip");
-            oe.instrument(new RingCodeConverter().iconst(2));
+            // Base game doesn't call onUnequip on four vanilla starting relics
+            // The upgraded ones will be instantly obtained without calling onUnequips of old ones
+            // SO there's a need to check if masterHandSize is correct afterwards
+            oe.insertAfter("{" + RingOfTheSerpentSE.class.getName() + ".CheckMasterHandSize();}");
             CtMethod oue = ctClass.getDeclaredMethod("onUnequip");
-            oue.instrument(new RingCodeConverter().iconst(2));
+            oue.instrument(new CodeConverter() {{
+                transformers = new Transformer(transformers) {
+                    @Override
+                    public int transform(CtClass ctClass, int index, CodeIterator iterator, ConstPool constPool)
+                            throws CannotCompileException, BadBytecode {
+                        int constbyte = iterator.byteAt(index);
+                        if (constbyte == ICONST_1) {
+                            iterator.writeByte(NOP, index);
+                            Bytecode bc = new Bytecode(constPool);
+                            // Subtract the delta stored ahead in onEquip,
+                            // after which the masterHandSize should be equal to ORIGIN_MASTER_HAND_SIZE
+                            // If the delta is negative, this will return the value subtracted from origin value
+                            bc.addGetstatic(RingOfTheSerpentSE.class.getName(), "MASTER_HAND_SIZE_DELTA", Descriptor.of(CtClass.intType));
+                            iterator.insert(index, bc.get());
+                        }
+                        return index;
+                    }
+                };
+            }});
             CtMethod atspd = CtNewMethod.make(CtClass.voidType, "atTurnStartPostDraw", new CtClass[0], null,
                     "{" + RingOfTheSerpentSE.class.getName() + ".RingTurnStart($0);}", ctClass);
             ctClass.addMethod(atspd);
+        }
+        
+        public static void CheckMasterHandSize() {
+            int originSize = SnakeRingSE.ORIGIN_MASTER_HAND_SIZE;
+            int currSize = AbstractDungeon.player.masterHandSize;
+            // currSize should be equal to (originSize + targetSize)
+            if (currSize != TARGET_MASTER_HAND_SIZE_DELTA + originSize) {
+                int diff = (TARGET_MASTER_HAND_SIZE_DELTA + originSize) - currSize;
+                AbstractDungeon.player.masterHandSize += diff;
+            }
+            King.Log("Final set masterHandSize: " + AbstractDungeon.player.masterHandSize);
+            // Finds out how many have been added to masterHandSize
+            // If masterHandSize < originSize, delta should be negative
+            MASTER_HAND_SIZE_DELTA = AbstractDungeon.player.masterHandSize - originSize;
         }
         
         public static void RingTurnStart(AbstractRelic r) {
@@ -225,6 +272,7 @@ public class EditStartingRelicManaged {
             LMSK.AddToBot(new DiscardAction(LMSK.Player(), LMSK.Player(), 1, false));
         }
         
+        @Deprecated
         private static class RingCodeConverter extends CodeConverter {
             private RingCodeConverter iconst(int v) {
                 transformers = new Transformer(transformers) {

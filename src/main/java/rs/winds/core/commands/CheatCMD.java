@@ -6,11 +6,15 @@ import com.megacrit.cardcrawl.actions.common.ApplyPowerAction;
 import com.megacrit.cardcrawl.actions.common.MakeTempCardInDrawPileAction;
 import com.megacrit.cardcrawl.actions.common.MakeTempCardInHandAction;
 import com.megacrit.cardcrawl.actions.unique.IncreaseMaxHpAction;
+import com.megacrit.cardcrawl.cards.colorless.Apparition;
 import com.megacrit.cardcrawl.cards.purple.FlurryOfBlows;
+import com.megacrit.cardcrawl.characters.AbstractPlayer;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
+import com.megacrit.cardcrawl.powers.AfterImagePower;
 import com.megacrit.cardcrawl.powers.BarricadePower;
 import com.megacrit.cardcrawl.powers.DexterityPower;
 import com.megacrit.cardcrawl.powers.StrengthPower;
+import com.megacrit.cardcrawl.powers.watcher.VigorPower;
 import com.megacrit.cardcrawl.rooms.AbstractRoom;
 import rs.lazymankits.utils.LMSK;
 
@@ -23,16 +27,24 @@ public class CheatCMD extends ConsoleCommand {
             cmdEnergyHelp();
             return;
         }
-//        if (tokens[1].equalsIgnoreCase("privatest") && tokens.length > 2) {
-//            LMSK.AddToBot(new MakeTempCardInDrawPileAction(new FlurryOfBlows(), 3, true, true));
-//            DevConsole.infiniteEnergy = !DevConsole.infiniteEnergy;
-//            if (DevConsole.infiniteEnergy) {
-//                AbstractDungeon.player.gainEnergy(9999);
-//            }
-//            CHEATING = true;
-//        } else {
-//            cmdEnergyHelp();
-//        }
+        if (tokens[1].equalsIgnoreCase("privatest") && tokens.length > 2) {
+            AbstractPlayer p = AbstractDungeon.player;
+            LMSK.AddToBot(new ApplyPowerAction(p, p, new BarricadePower(p)));
+            LMSK.AddToBot(new ApplyPowerAction(p, p, new StrengthPower(p, 1)));
+            LMSK.AddToBot(new ApplyPowerAction(p, p, new DexterityPower(p, 1)));
+            LMSK.AddToBot(new ApplyPowerAction(p, p, new AfterImagePower(p, 1)));
+            LMSK.AddToBot(new ApplyPowerAction(p, p, new VigorPower(p, 2)));
+            LMSK.AddToBot(new MakeTempCardInHandAction(new Apparition(), 1));
+            DevConsole.infiniteEnergy = !DevConsole.infiniteEnergy;
+            if (DevConsole.infiniteEnergy) {
+                p.gainEnergy(9999);
+            }
+            CHEATING = true;
+        } else if (tokens[1].equalsIgnoreCase("privatestclose") && tokens.length > 2) {
+            CHEATING = false;
+        } else {
+            cmdEnergyHelp();
+        }
     }
     
     @Override

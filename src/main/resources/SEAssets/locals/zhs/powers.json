@@ -248,7 +248,7 @@
   "strong:GodVisionPower": {
     "NAME": "神视",
     "DESCRIPTIONS": [
-      "你最多只能拥有五种正面buff，之后无法再获得其他正面buff."
+      "你最多只能拥有 #b[amt_0] 种正面buff，之后无法再获得其他正面buff."
     ]
   },
   "strong:GodTouchPower": {

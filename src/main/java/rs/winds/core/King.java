@@ -44,6 +44,7 @@ import rs.winds.cards.blue.Allocation;
 import rs.winds.cards.blue.BodySlamPowerCard;
 import rs.winds.cards.curse.CurseOfGod;
 import rs.winds.cards.silent.AlwaysPrepared;
+import rs.winds.cards.silent.GreatAcrobaics;
 import rs.winds.cards.watcher.WatcherFour;
 import rs.winds.cards.watcher.WatcherThree;
 import rs.winds.core.commands.CheatCMD;
@@ -191,7 +192,7 @@ public class King implements EditStringsSubscriber, PostInitializeSubscriber, St
     
     @Override
     public void receivePostInitialize() {
-        ConsoleCommand.addCommand("sernitya", CheatCMD.class);
+//        ConsoleCommand.addCommand("sernitya", CheatCMD.class);
         
         BaseMod.registerCustomReward(SEEnums.ApoRewardType, load -> new ApoReward(), 
                 save -> new RewardSave(save.type.toString(), "SE_ApoReward"));
@@ -265,6 +266,7 @@ public class King implements EditStringsSubscriber, PostInitializeSubscriber, St
         BaseMod.addCard(new WatcherThree());
         BaseMod.addCard(new WatcherFour());
         BaseMod.addCard(new AlwaysPrepared());
+        BaseMod.addCard(new GreatAcrobaics());
         
         BaseMod.addCard(new BodySlamPowerCard());
         BaseMod.addCard(new Allocation());
